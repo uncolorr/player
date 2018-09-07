@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="utf-8"?>
+<android.support.design.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context="com.example.uncolor.vkmusic.main_activity.MainActivity">
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical">
+
+        <android.support.design.widget.AppBarLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@android:color/white">
+
+            <android.support.v7.widget.Toolbar
+                android:id="@+id/toolbar"
+                android:layout_width="match_parent"
+                android:layout_height="?attr/actionBarSize"
+                android:background="@color/colorMain"
+                android:theme="@style/ThemeOverlay.AppCompat.ActionBar"
+                app:contentInsetEnd="0dp"
+                app:contentInsetLeft="0dp"
+                app:contentInsetRight="0dp"
+                app:contentInsetStart="0dp"
+                app:popupTheme="@style/ThemeOverlay.AppCompat.Light">
+
+            </android.support.v7.widget.Toolbar>
+
+        </android.support.design.widget.AppBarLayout>
+
+
+        <com.example.uncolor.vkmusic.widgets.StaticViewPager
+            android:id="@+id/viewPager"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1">
+
+        </com.example.uncolor.vkmusic.widgets.StaticViewPager>
+
+
+        <ProgressBar
+            android:id="@+id/progressBarMusic"
+            style="?android:attr/progressBarStyleHorizontal"
+            android:layout_width="match_parent"
+            android:layout_height="4dp"
+            android:theme="@style/ProgressBarStyle"/>
+
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1px"
+            android:background="#d8d8d8">
+
+        </View>
+
+        <LinearLayout
+            android:id="@+id/playerPanel"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:orientation="horizontal">
+
+
+            <com.example.uncolor.vkmusic.widgets.SquareImageView
+                android:id="@+id/imageViewPanelAlbum"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:layout_gravity="center"
+                android:layout_marginStart="8dp"
+                android:src="@drawable/album_default" />
+
+            <LinearLayout
+                android:id="@+id/linearLayout"
+                android:layout_width="0dp"
+                android:layout_height="match_parent"
+                android:layout_marginEnd="8dp"
+                android:layout_marginStart="8dp"
+                android:layout_weight="1"
+                android:gravity="center_vertical"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/textViewPanelSongTitle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginBottom="4dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="8dp"
+                    android:singleLine="true"
+                    android:textColor="@android:color/black"
+                    android:text="Redneck"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:id="@+id/textViewPanelArtist"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginStart="8dp"
+                    android:singleLine="true"
+                    android:textColor="@color/colorMain"
+                    android:text="Lamb of God" />
+
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/imageButtonPanelPlay"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="8dp"
+                android:layout_gravity="center"
+                android:background="@android:color/transparent"
+                android:padding="2dp"
+                android:scaleType="centerCrop"
+                android:src="@drawable/play"
+                android:tint="@color/colorMain" />
+
+            <ImageButton
+                android:id="@+id/imageButtonPanelNext"
+                android:layout_width="32dp"
+                android:layout_height="32dp"
+                android:layout_marginEnd="16dp"
+                android:layout_gravity="center"
+                android:background="@android:color/transparent"
+                android:scaleType="centerCrop"
+                android:src="@drawable/next"
+                android:tint="@color/colorMain" />
+
+
+        </LinearLayout>
+
+        <android.support.design.widget.BottomNavigationView
+            android:id="@+id/bottomNavigationView"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            app:menu="@menu/menu_main_bottom_navigation">
+
+        </android.support.design.widget.BottomNavigationView>
+
+    </LinearLayout>
+
+    <include layout="@layout/bottom_sheet_player_panel" />
+
+</android.support.design.widget.CoordinatorLayout>

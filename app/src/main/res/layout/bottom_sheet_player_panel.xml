@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/bigPlayerPanel"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:background="@android:color/white"
+    app:behavior_hideable="true"
+    app:behavior_peekHeight="0dp"
+    app:layout_behavior="android.support.design.widget.BottomSheetBehavior">
+
+
+    <ImageButton
+        android:id="@+id/imageButtonHide"
+        android:layout_width="48dp"
+        android:layout_height="32dp"
+        android:layout_gravity="center"
+        android:scaleType="centerCrop"
+        android:padding="10dp"
+        android:tint="@color/colorMain"
+        android:background="@android:color/transparent"
+        android:src="@drawable/down"
+        android:layout_marginTop="8dp"/>
+    
+    <com.example.uncolor.vkmusic.widgets.SquareImageView
+        android:id="@+id/imageViewMusicPlate"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_marginStart="56dp"
+        android:padding="4dp"
+        android:adjustViewBounds="true"
+        android:scaleType="centerCrop"
+        android:background="@drawable/album_default"
+        android:layout_marginEnd="56dp"
+        android:layout_marginTop="8dp" />
+
+    <SeekBar
+        android:id="@+id/seekBar"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="12dp"
+        android:layout_marginStart="44dp"
+        android:layout_marginEnd="44dp"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal">
+
+        <TextView
+            android:id="@+id/textViewCurrentPosition"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="56dp"
+            android:text="0:01"
+            android:layout_weight="1"/>
+
+        <TextView
+            android:id="@+id/textViewDuration"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginEnd="56dp"
+            android:textAlignment="textEnd"
+            android:text="3:44"
+            android:layout_weight="1"/>
+
+    </LinearLayout>
+
+
+    <TextView
+        android:id="@+id/textViewPlayerSongTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:layout_marginTop="12dp"
+        android:layout_marginBottom="8dp"
+        android:layout_marginStart="32dp"
+        android:layout_marginEnd="32dp"
+        android:textSize="22sp"
+        android:textColor="@android:color/black"
+        android:textAlignment="center"
+        android:singleLine="true"
+        android:text="Psychosocial"/>
+
+    <TextView
+        android:id="@+id/textViewPlayerArtist"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        android:textAlignment="center"
+        android:textSize="16sp"
+        android:textColor="@color/colorMain"
+        android:text="Slipknot"/>
+
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center">
+
+        <ImageButton
+            android:id="@+id/imageButtonPlayerPrevious"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginEnd="20dp"
+            android:scaleType="centerCrop"
+            android:padding="2dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/previous"/>
+
+        <ImageButton
+            android:id="@+id/imageButtonPlayerPlay"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:scaleType="centerCrop"
+            android:padding="2dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/play"/>
+
+        <ImageButton
+            android:id="@+id/imageButtonPlayerNext"
+            android:layout_width="48dp"
+            android:layout_height="48dp"
+            android:layout_marginStart="20dp"
+            android:scaleType="centerCrop"
+            android:padding="2dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/next"/>
+
+    </LinearLayout>
+
+
+    <Space
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"/>
+
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="8dp"
+        android:gravity="center">
+
+        <ImageButton
+            android:layout_width="32dp"
+            android:layout_height="32dp" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <ImageButton
+            android:id="@+id/imageButtonDownload"
+            android:layout_width="32dp"
+            android:layout_height="32dp"
+            android:scaleType="centerCrop"
+            android:padding="4dp"
+            android:background="@android:color/transparent"
+            android:src="@drawable/download" />
+
+        <Space
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"/>
+
+        <ImageButton
+            android:layout_width="32dp"
+            android:layout_height="32dp" />
+
+    </LinearLayout>
+
+
+
+</LinearLayout>
