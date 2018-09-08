@@ -181,8 +181,9 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
     private void playAudio(String url) throws Exception {
-        killMediaPlayer();
-        initMediaPlayer();
+       // killMediaPlayer();
+        mediaPlayer.reset();
+       // initMediaPlayer();
         mediaPlayer.setDataSource(url);
         mediaPlayer.prepare();
         mediaPlayer.start();
@@ -218,6 +219,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public void onDestroy() {
         App.Log("onDestroy");
         super.onDestroy();
+        killMediaPlayer();
     }
 
     @Nullable
