@@ -56,14 +56,14 @@
             android:layout_width="match_parent"
             android:layout_height="1px"
             android:background="#d8d8d8">
-
         </View>
 
         <LinearLayout
             android:id="@+id/playerPanel"
             android:layout_width="match_parent"
             android:layout_height="56dp"
-            android:orientation="horizontal">
+            android:orientation="horizontal"
+            android:background="@android:color/white">
 
 
             <com.example.uncolor.vkmusic.widgets.SquareImageView
