@@ -22,12 +22,14 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     public static final String ACTION_PREVIOUS = "com.example.uncolor.action.PREVIOUS";
     public static final String ACTION_NEXT = "com.example.uncolor.action.NEXT";
     public static final String ACTION_PAUSE_OR_RESUME = "com.example.uncolor.action.PAUSE_RESUME";
+    public static final String ACTION_PLAYER_STATUS = "com.example.uncolor.action.PLAYER_STATUS";
 
 
     public static final String ARG_PLAYLIST = "playlist";
     public static final String ARG_MUSIC = "music";
     public static final String ARG_POSITION = "position";
     public static final String ARG_IS_PAUSE = "isPause";
+    public static final String ARG_PLAYBACK_POSITION = "playbackPosition";
 
     private static final int TIME_LIMIT_FOR_TURN_PREVIOUS = 5000;
 
@@ -67,9 +69,25 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             onActionPrevious();
         }
 
+        if (Objects.equals(action, ACTION_PLAYER_STATUS)) {
+            onActionPlayerStatus();
+        }
+
         return super.onStartCommand(intent, flags, startId);
     }
 
+    private void onActionPlayerStatus() {
+        App.Log("onActionPlayerStatus");
+        boolean isPause = !mediaPlayer.isPlaying();
+        Intent musicIntent = new Intent(ACTION_PLAYER_STATUS);
+        int currentPlaybackPosition = mediaPlayer.getCurrentPosition() / 1000;
+        musicIntent.putExtra(ARG_IS_PAUSE, isPause);
+        if(!isPause) {
+            musicIntent.putExtra(ARG_PLAYBACK_POSITION, currentPlaybackPosition);
+            musicIntent.putExtra(ARG_MUSIC, playlist.get(playlistPosition));
+        }
+        sendBroadcast(musicIntent);
+    }
 
 
     private void onActionPlay(Bundle extras){
@@ -94,16 +112,18 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private void onActionNext(){
         if (playlistPosition != playlist.size() - 1) {
             playlistPosition++;
-            BaseMusic nextMusic = playlist.get(playlistPosition);
-            App.Log(nextMusic.getArtist());
-            App.Log(nextMusic.getTitle());
-            try {
-                playAudio(nextMusic.getDownload());
-                Intent musicIntent = new Intent(ACTION_NEXT);
-                musicIntent.putExtra(ARG_MUSIC, nextMusic);
-                sendBroadcast(musicIntent);
-            } catch (Exception e) {
-                e.printStackTrace();
+            if(!playlist.isEmpty()) {
+                BaseMusic nextMusic = playlist.get(playlistPosition);
+                App.Log(nextMusic.getArtist());
+                App.Log(nextMusic.getTitle());
+                try {
+                    playAudio(nextMusic.getDownload());
+                    Intent musicIntent = new Intent(ACTION_NEXT);
+                    musicIntent.putExtra(ARG_MUSIC, nextMusic);
+                    sendBroadcast(musicIntent);
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
             }
         }
     }
@@ -140,6 +160,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         boolean isPause = pauseOrResumeMedia();
         Intent musicIntent = new Intent(ACTION_PAUSE_OR_RESUME);
         musicIntent.putExtra(ARG_IS_PAUSE, isPause);
+        musicIntent.putExtra(ARG_PLAYBACK_POSITION, playbackPosition / 1000);
         sendBroadcast(musicIntent);
     }
 
@@ -149,6 +170,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         intentFilter.addAction(ACTION_NEXT);
         intentFilter.addAction(ACTION_PREVIOUS);
         intentFilter.addAction(ACTION_PAUSE_OR_RESUME);
+        intentFilter.addAction(ACTION_PLAYER_STATUS);
         return intentFilter;
     }
 

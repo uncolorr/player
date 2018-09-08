@@ -9,6 +9,7 @@ import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
+import android.view.View;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -29,9 +30,10 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
 
 import java.util.Objects;
+
 @EActivity(R.layout.activity_main)
 public class MainActivity extends AppCompatActivity implements
-        BottomNavigationView.OnNavigationItemSelectedListener{
+        BottomNavigationView.OnNavigationItemSelectedListener {
 
     @ViewById
     StaticViewPager viewPager;
@@ -92,17 +94,18 @@ public class MainActivity extends AppCompatActivity implements
 
     private int musicDuration;
 
-    public static Intent getInstance(Context context){
+    public static Intent getInstance(Context context) {
         return new Intent(context, MainActivity_.class);
     }
 
     @AfterViews
-    void init(){
+    void init() {
         sheetBehavior = BottomSheetBehavior.from(bigPlayerPanel);
-        hidePlayerPanel();
+        hidePlayer();
         bottomNavigationView.setOnNavigationItemSelectedListener(this);
         adapter = new MainPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(adapter);
+        viewPager.setOffscreenPageLimit(3);
         musicReceiver = getMusicReceiver();
         registerReceiver(musicReceiver, MusicService.getMusicIntentFilter());
         handler = new Handler();
@@ -110,47 +113,47 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Click(R.id.playerPanel)
-    void onPlayerPanelClick(){
-       showPlayerPanel();
+    void onPlayerPanelClick() {
+        showPlayer();
     }
 
     @Click(R.id.imageButtonHide)
-    void onImageButtonHideClick(){
-       hidePlayerPanel();
+    void onImageButtonHideClick() {
+        hidePlayer();
     }
 
     @Click({R.id.imageButtonPanelPlay, R.id.imageButtonPlayerPlay})
-    void onPlayButtonClick(){
+    void onPlayButtonClick() {
         Intent intent = new Intent(this, MusicService.class);
         intent.setAction(MusicService.ACTION_PAUSE_OR_RESUME);
         startService(intent);
     }
 
     @Click({R.id.imageButtonPanelNext, R.id.imageButtonPlayerNext})
-    void onNextButtonClick(){
+    void onNextButtonClick() {
         Intent intent = new Intent(this, MusicService.class);
         intent.setAction(MusicService.ACTION_NEXT);
         startService(intent);
     }
 
     @Click(R.id.imageButtonPlayerPrevious)
-    void onPreviousButtonClick(){
+    void onPreviousButtonClick() {
         Intent intent = new Intent(this, MusicService.class);
         intent.setAction(MusicService.ACTION_PREVIOUS);
         startService(intent);
     }
 
-    private boolean isPlayerPanelHidden(){
-       return sheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN;
+    private boolean isPlayerPanelHidden() {
+        return sheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN;
     }
 
-    private void showPlayerPanel(){
+    private void showPlayer() {
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }
     }
 
-    private void hidePlayerPanel(){
+    private void hidePlayer() {
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         }
@@ -158,13 +161,12 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onBackPressed() {
-        if(!isPlayerPanelHidden()){
-            hidePlayerPanel();
+        if (!isPlayerPanelHidden()) {
+            hidePlayer();
             return;
         }
         super.onBackPressed();
     }
-
 
 
     private Runnable getMusicPositionRunnable() {
@@ -172,10 +174,14 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void run() {
                 musicProgressPosition++;
+                App.Log("tick" + musicProgressPosition);
                 progressBarMusic.setProgress(musicProgressPosition);
                 seekBar.setProgress(musicProgressPosition);
-                if(musicProgressPosition < musicDuration)
-                handler.postDelayed(musicPositionRunnable, 1000);
+                textViewCurrentPosition.setText(DurationConverter
+                        .getDurationFormat(musicProgressPosition));
+                if (musicProgressPosition < musicDuration) {
+                    handler.postDelayed(musicPositionRunnable, 1000);
+                }
             }
         };
     }
@@ -186,76 +192,131 @@ public class MainActivity extends AppCompatActivity implements
             public void onReceive(Context context, Intent intent) {
                 App.Log("onReceive");
                 String action = intent.getAction();
-                if(Objects.equals(action, MusicService.ACTION_PLAY)){
+                if (Objects.equals(action, MusicService.ACTION_PLAY)) {
                     BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
                     setSongDescriptions(music);
                     setPauseButtons();
-                    musicProgressPosition = 0;
+                    setPlaybackPosition(0);
+                    showPlayerPanel();
                     handler.removeCallbacks(musicPositionRunnable);
                     handler.post(musicPositionRunnable);
 
                 }
 
-                if(Objects.equals(action, MusicService.ACTION_PAUSE_OR_RESUME)){
+                if (Objects.equals(action, MusicService.ACTION_PAUSE_OR_RESUME)) {
                     boolean isPause = intent.getBooleanExtra(MusicService.ARG_IS_PAUSE, true);
-                    if(isPause){
+                    //int playbackPosition = intent.getIntExtra(MusicService.ARG_PLAYBACK_POSITION, 0);
+                    if (isPause) {
                         setPlayButtons();
-                    }
-                    else {
+                        handler.removeCallbacks(musicPositionRunnable);
+                    } else {
                         setPauseButtons();
+                        handler.post(musicPositionRunnable);
                     }
                 }
 
-                if(Objects.equals(action, MusicService.ACTION_NEXT)){
+                if (Objects.equals(action, MusicService.ACTION_NEXT)) {
                     BaseMusic music = intent.getParcelableExtra("music");
-                    App.Log(music.getTitle());
-                    App.Log(music.getArtist());
                     setSongDescriptions(music);
                     setPauseButtons();
+                    setPlaybackPosition(0);
+                    handler.removeCallbacks(musicPositionRunnable);
+                    handler.post(musicPositionRunnable);
+
                 }
 
-                if(Objects.equals(action, MusicService.ACTION_PREVIOUS)){
+                if (Objects.equals(action, MusicService.ACTION_PREVIOUS)) {
                     BaseMusic music = intent.getParcelableExtra("music");
-                    App.Log(music.getTitle());
-                    App.Log(music.getArtist());
                     setSongDescriptions(music);
                     setPauseButtons();
+                    setPlaybackPosition(0);
+                    handler.removeCallbacks(musicPositionRunnable);
+                    handler.post(musicPositionRunnable);
                 }
+
+                if (Objects.equals(action, MusicService.ACTION_PLAYER_STATUS)) {
+                    boolean isPause = intent.getBooleanExtra(MusicService.ARG_IS_PAUSE, true);
+                    int playbackPosition = intent.getIntExtra(MusicService.ARG_PLAYBACK_POSITION, 0);
+                    BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
+                    if (isPause) {
+                        App.Log("isPause");
+                        hidePlayerPanel();
+                    } else {
+                        App.Log("not isPause");
+                        showPlayerPanel();
+                        setSongDescriptions(music);
+                        setPauseButtons();
+                        setDurationForBars(music.getDuration());
+                        setPlaybackPosition(playbackPosition);
+                        handler.post(musicPositionRunnable);
+                    }
+                }
+
             }
         };
     }
 
-    private void setPlayButtons(){
+    private void showPlayerPanel() {
+        progressBarMusic.setVisibility(View.VISIBLE);
+        playerPanel.setVisibility(View.VISIBLE);
+    }
+
+    private void hidePlayerPanel() {
+        progressBarMusic.setVisibility(View.GONE);
+        playerPanel.setVisibility(View.GONE);
+    }
+
+    private void setPlayButtons() {
         imageButtonPanelPlay.setImageResource(R.drawable.play);
         imageButtonPlayerPlay.setImageResource(R.drawable.play);
     }
 
-    private void setPauseButtons(){
+    private void setPauseButtons() {
         imageButtonPanelPlay.setImageResource(R.drawable.pause);
         imageButtonPlayerPlay.setImageResource(R.drawable.pause);
     }
 
-    public void setSongDescriptions(BaseMusic music){
+    private void setSongDescriptions(BaseMusic music) {
         textViewPanelSongTitle.setText(music.getTitle());
         textViewPanelArtist.setText(music.getArtist());
         textViewPlayerSongTitle.setText(music.getTitle());
         textViewPlayerArtist.setText(music.getArtist());
         musicDuration = music.getDuration();
         textViewDuration.setText(DurationConverter.getDurationFormat(music.getDuration()));
-        seekBar.setMax(music.getDuration());
-        progressBarMusic.setMax(music.getDuration());
+        setDurationForBars(music.getDuration());
     }
+
+    private void setPlaybackPosition(int playbackPosition) {
+        musicProgressPosition = playbackPosition;
+        progressBarMusic.setProgress(playbackPosition);
+        seekBar.setProgress(playbackPosition);
+
+    }
+
+    public void setDurationForBars(int duration) {
+        seekBar.setMax(duration);
+        progressBarMusic.setMax(duration);
+    }
+
 
     @Override
     protected void onResume() {
         super.onResume();
+        Intent intent = new Intent(this, MusicService.class);
+        intent.setAction(MusicService.ACTION_PLAYER_STATUS);
+        startService(intent);
+    }
 
+    @Override
+    protected void onStop() {
+        super.onStop();
+        handler.removeCallbacks(musicPositionRunnable);
     }
 
     @Override
     public boolean onNavigationItemSelected(@NonNull MenuItem item) {
         int id = item.getItemId();
-        switch (id){
+        switch (id) {
             case R.id.action_my_music:
                 viewPager.setCurrentItem(0, true);
                 break;
