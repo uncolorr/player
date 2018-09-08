@@ -59,7 +59,7 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
         super.onStart(intent, startId);
         Bundle extras = intent.getExtras();
         if (extras != null) {
-            music = (BaseMusic) extras.getSerializable("music");
+            music = extras.getParcelable("music");
             if(music != null) {
                 App.Log("download url: " + music.getDownload());
             }
