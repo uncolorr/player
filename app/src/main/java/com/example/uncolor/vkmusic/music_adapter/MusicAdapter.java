@@ -22,6 +22,7 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
 
     private List<T> items = new ArrayList<>();
     private BaseMusicFragmentPresenter presenter;
+    private BaseMusic currentMusic;
 
     public MusicAdapter(BaseMusicFragmentPresenter presenter) {
         this.presenter = presenter;
@@ -34,6 +35,11 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
 
     public void clear(){
         this.items.clear();
+        notifyDataSetChanged();
+    }
+
+    public void changeCurrentMusic(BaseMusic music){
+        this.currentMusic = music;
         notifyDataSetChanged();
     }
 
@@ -51,7 +57,7 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
     public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
         if(holder instanceof MusicViewHolder){
             MusicViewHolder musicViewHolder = (MusicViewHolder)holder;
-            musicViewHolder.bind(items.get(position));
+            musicViewHolder.bind(items.get(position), currentMusic);
         }
     }
 

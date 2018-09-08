@@ -2,6 +2,9 @@ package com.example.uncolor.vkmusic.main_activity.my_music_fragment;
 
 import android.Manifest;
 import android.app.Activity;
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.support.annotation.NonNull;
 import android.support.v4.app.Fragment;
@@ -47,6 +50,8 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
 
     private GetVkMusicBody getVkMusicBody;
 
+    private BroadcastReceiver musicReceiver;
+
     @AfterViews
     void init() {
         getVkMusicBody = new GetVkMusicBody();
@@ -58,6 +63,22 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
                         LinearLayoutManager.VERTICAL,
                         false));
         presenter.onLoadMusic(getVkMusicBody, true);
+        musicReceiver = getMusicReceiver();
+       getContext().registerReceiver(musicReceiver, MusicService.getMusicIntentFilter());
+    }
+
+    private BroadcastReceiver getMusicReceiver() {
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                App.Log("fragment on receive");
+                BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
+                if(music == null){
+                    return;
+                }
+                musicAdapter.changeCurrentMusic(music);
+            }
+        };
     }
 
     @Override
