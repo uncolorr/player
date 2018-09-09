@@ -1,10 +1,12 @@
 package com.example.uncolor.vkmusic.services;
 
+import android.annotation.SuppressLint;
 import android.app.Service;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
@@ -12,6 +14,7 @@ import android.support.annotation.Nullable;
 import com.example.uncolor.vkmusic.application.App;
 import com.example.uncolor.vkmusic.models.BaseMusic;
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Objects;
 
@@ -180,13 +183,24 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         mediaPlayer.setOnCompletionListener(this);
     }
 
-    private void playAudio(String url) throws Exception {
-       // killMediaPlayer();
-        mediaPlayer.reset();
-       // initMediaPlayer();
-        mediaPlayer.setDataSource(url);
-        mediaPlayer.prepare();
-        mediaPlayer.start();
+    @SuppressLint("StaticFieldLeak")
+    private void playAudio(final String url) throws Exception {
+        new AsyncTask<Void, Void, Void>(){
+            @Override
+            protected Void doInBackground(Void... voids) {
+                try {
+                    mediaPlayer.reset();
+                    mediaPlayer.setDataSource(url);
+                    mediaPlayer.prepare();
+                    mediaPlayer.start();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                return null;
+            }
+        }.execute();
+
     }
 
 

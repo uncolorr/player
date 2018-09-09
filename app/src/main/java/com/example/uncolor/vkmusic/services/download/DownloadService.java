@@ -41,8 +41,6 @@ import okhttp3.ResponseBody;
 
 public class DownloadService extends IntentService implements ApiResponse.ApiFailureListener {
 
-
-
     public DownloadService() {
         super("Download Service");
     }
