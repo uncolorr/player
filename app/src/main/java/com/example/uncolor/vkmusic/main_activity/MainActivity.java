@@ -174,7 +174,7 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void run() {
                 musicProgressPosition++;
-                App.Log("tick" + musicProgressPosition);
+                App.Log("tick " + musicProgressPosition);
                 progressBarMusic.setProgress(musicProgressPosition);
                 seekBar.setProgress(musicProgressPosition);
                 textViewCurrentPosition.setText(DurationConverter
@@ -199,13 +199,12 @@ public class MainActivity extends AppCompatActivity implements
                     setPlaybackPosition(0);
                     showPlayerPanel();
                     handler.removeCallbacks(musicPositionRunnable);
-                    handler.post(musicPositionRunnable);
+                  //  handler.post(musicPositionRunnable);
 
                 }
 
                 if (Objects.equals(action, MusicService.ACTION_PAUSE_OR_RESUME)) {
                     boolean isPause = intent.getBooleanExtra(MusicService.ARG_IS_PAUSE, true);
-                    //int playbackPosition = intent.getIntExtra(MusicService.ARG_PLAYBACK_POSITION, 0);
                     if (isPause) {
                         setPlayButtons();
                         handler.removeCallbacks(musicPositionRunnable);
@@ -221,7 +220,7 @@ public class MainActivity extends AppCompatActivity implements
                     setPauseButtons();
                     setPlaybackPosition(0);
                     handler.removeCallbacks(musicPositionRunnable);
-                    handler.post(musicPositionRunnable);
+               //     handler.post(musicPositionRunnable);
 
                 }
 
@@ -231,7 +230,7 @@ public class MainActivity extends AppCompatActivity implements
                     setPauseButtons();
                     setPlaybackPosition(0);
                     handler.removeCallbacks(musicPositionRunnable);
-                    handler.post(musicPositionRunnable);
+                 //   handler.post(musicPositionRunnable);
                 }
 
                 if (Objects.equals(action, MusicService.ACTION_PLAYER_STATUS)) {
@@ -250,6 +249,13 @@ public class MainActivity extends AppCompatActivity implements
                         setPlaybackPosition(playbackPosition);
                         handler.post(musicPositionRunnable);
                     }
+                }
+
+                if (Objects.equals(action, MusicService.ACTION_BEGIN_PLAYING)) {
+                    handler.removeCallbacks(musicPositionRunnable);
+                    setPauseButtons();
+                    setPlaybackPosition(0);
+                    handler.post(musicPositionRunnable);
                 }
 
             }
