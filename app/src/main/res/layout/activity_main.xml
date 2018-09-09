@@ -93,7 +93,7 @@
                     android:layout_marginStart="8dp"
                     android:singleLine="true"
                     android:textColor="@android:color/black"
-                    android:text="Redneck"
+                    android:text="-"
                     android:textSize="18sp" />
 
                 <TextView
@@ -104,7 +104,7 @@
                     android:layout_marginStart="8dp"
                     android:singleLine="true"
                     android:textColor="@color/colorMain"
-                    android:text="Lamb of God" />
+                    android:text="-" />
 
             </LinearLayout>
 
