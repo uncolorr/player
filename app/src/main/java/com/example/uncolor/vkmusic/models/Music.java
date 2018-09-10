@@ -13,7 +13,7 @@ import io.realm.RealmObject;
  * Created by Uncolor on 24.08.2018.
  */
 
-public class Music extends RealmObject implements BaseMusic{
+public class Music implements BaseMusic {
 
     @SerializedName("source_id")
     private String sourceId;
@@ -39,8 +39,12 @@ public class Music extends RealmObject implements BaseMusic{
     @SerializedName("stream")
     private String stream;
 
-    public Music(){
+    private String localPath;
 
+    private int state;
+
+    public Music(){
+        this.state = BaseMusic.STATE_DEFAULT;
     }
 
     protected Music(Parcel in) {
@@ -52,6 +56,8 @@ public class Music extends RealmObject implements BaseMusic{
         genreId = in.readInt();
         download = in.readString();
         stream = in.readString();
+        localPath = in.readString();
+        state = in.readInt();
     }
 
     public static final Creator<Music> CREATOR = new Creator<Music>() {
@@ -86,6 +92,26 @@ public class Music extends RealmObject implements BaseMusic{
         return download;
     }
 
+    @Override
+    public String getLocalPath() {
+        return localPath;
+    }
+
+    @Override
+    public void setLocalPath(String localPath) {
+        this.localPath = localPath;
+    }
+
+    @Override
+    public int getState() {
+        return state;
+    }
+
+    @Override
+    public void setState(int state) {
+        this.state = state;
+    }
+
 
     @Override
     public int describeContents() {
@@ -94,6 +120,7 @@ public class Music extends RealmObject implements BaseMusic{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
+
         dest.writeString(sourceId);
         dest.writeString(artist);
         dest.writeString(title);
@@ -102,5 +129,9 @@ public class Music extends RealmObject implements BaseMusic{
         dest.writeInt(genreId);
         dest.writeString(download);
         dest.writeString(stream);
+        dest.writeString(localPath);
+        dest.writeInt(state);
     }
+
+
 }
