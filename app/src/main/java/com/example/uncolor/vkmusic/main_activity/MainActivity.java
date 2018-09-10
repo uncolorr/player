@@ -16,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.example.uncolor.vkmusic.IntentFilterManager;
 import com.example.uncolor.vkmusic.R;
 import com.example.uncolor.vkmusic.application.App;
 import com.example.uncolor.vkmusic.models.BaseMusic;
@@ -33,7 +34,7 @@ import java.util.Objects;
 
 @EActivity(R.layout.activity_main)
 public class MainActivity extends AppCompatActivity implements
-        BottomNavigationView.OnNavigationItemSelectedListener {
+        BottomNavigationView.OnNavigationItemSelectedListener, SeekBar.OnSeekBarChangeListener {
 
     @ViewById
     StaticViewPager viewPager;
@@ -107,9 +108,10 @@ public class MainActivity extends AppCompatActivity implements
         viewPager.setAdapter(adapter);
         viewPager.setOffscreenPageLimit(3);
         musicReceiver = getMusicReceiver();
-        registerReceiver(musicReceiver, MusicService.getMusicIntentFilter());
+        registerReceiver(musicReceiver, IntentFilterManager.getMusicIntentFilter());
         handler = new Handler();
         musicPositionRunnable = getMusicPositionRunnable();
+        seekBar.setOnSeekBarChangeListener(this);
     }
 
     @Click(R.id.playerPanel)
@@ -174,7 +176,6 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void run() {
                 musicProgressPosition++;
-                App.Log("tick " + musicProgressPosition);
                 progressBarMusic.setProgress(musicProgressPosition);
                 seekBar.setProgress(musicProgressPosition);
                 textViewCurrentPosition.setText(DurationConverter
@@ -199,8 +200,6 @@ public class MainActivity extends AppCompatActivity implements
                     setPlaybackPosition(0);
                     showPlayerPanel();
                     handler.removeCallbacks(musicPositionRunnable);
-                  //  handler.post(musicPositionRunnable);
-
                 }
 
                 if (Objects.equals(action, MusicService.ACTION_PAUSE_OR_RESUME)) {
@@ -220,8 +219,6 @@ public class MainActivity extends AppCompatActivity implements
                     setPauseButtons();
                     setPlaybackPosition(0);
                     handler.removeCallbacks(musicPositionRunnable);
-               //     handler.post(musicPositionRunnable);
-
                 }
 
                 if (Objects.equals(action, MusicService.ACTION_PREVIOUS)) {
@@ -230,10 +227,9 @@ public class MainActivity extends AppCompatActivity implements
                     setPauseButtons();
                     setPlaybackPosition(0);
                     handler.removeCallbacks(musicPositionRunnable);
-                 //   handler.post(musicPositionRunnable);
                 }
 
-                if (Objects.equals(action, MusicService.ACTION_PLAYER_STATUS)) {
+                if (Objects.equals(action, MusicService.ACTION_PLAYER_RESUME)) {
                     boolean isPause = intent.getBooleanExtra(MusicService.ARG_IS_PAUSE, true);
                     int playbackPosition = intent.getIntExtra(MusicService.ARG_PLAYBACK_POSITION, 0);
                     BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
@@ -309,7 +305,7 @@ public class MainActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
         Intent intent = new Intent(this, MusicService.class);
-        intent.setAction(MusicService.ACTION_PLAYER_STATUS);
+        intent.setAction(MusicService.ACTION_PLAYER_RESUME);
         startService(intent);
     }
 
@@ -334,5 +330,28 @@ public class MainActivity extends AppCompatActivity implements
                 break;
         }
         return true;
+    }
+
+    @Override
+    public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
+        if(fromUser){
+            App.Log("progress: " + Integer.toString(progress));
+            setPlaybackPosition(progress);
+            Intent intent = new Intent(this, MusicService.class);
+            intent.setAction(MusicService.ACTION_SEEK_BAR_MOVING);
+            intent.putExtra(MusicService.ARG_PLAYBACK_POSITION, progress);
+            startService(intent);
+        }
+
+    }
+
+    @Override
+    public void onStartTrackingTouch(SeekBar seekBar) {
+
+    }
+
+    @Override
+    public void onStopTrackingTouch(SeekBar seekBar) {
+
     }
 }
