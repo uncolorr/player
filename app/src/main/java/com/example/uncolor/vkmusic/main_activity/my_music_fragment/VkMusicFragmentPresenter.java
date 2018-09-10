@@ -12,9 +12,11 @@ import com.example.uncolor.vkmusic.Apis.response_models.VKMusicResponseModel;
 import com.example.uncolor.vkmusic.application.App;
 import com.example.uncolor.vkmusic.application.AppPermissionManager;
 import com.example.uncolor.vkmusic.models.BaseMusic;
+import com.example.uncolor.vkmusic.models.VkMusic;
 import com.example.uncolor.vkmusic.services.MusicService;
 import com.example.uncolor.vkmusic.services.download.DownloadService;
 
+import java.io.File;
 import java.io.IOException;
 
 /**
@@ -87,10 +89,15 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
         context.startService(intent);
     }
 
+    @Override
+    public void onDeleteTrack(BaseMusic music, int position) {
+        view.deleteMusic((VkMusic) music, position);
+    }
+
     private void startDownload(BaseMusic music) {
         App.Log("start Download");
         Intent intent = new Intent(context, DownloadService.class);
-        intent.putExtra("music", music);
+        intent.putExtra(DownloadService.ARG_MUSIC, music);
         context.startService(intent);
     }
 

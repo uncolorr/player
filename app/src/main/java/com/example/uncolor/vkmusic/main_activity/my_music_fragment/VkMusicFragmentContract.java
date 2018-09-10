@@ -22,6 +22,7 @@ public interface VkMusicFragmentContract {
         void showProgress();
         void hideProgress();
         void setMusicItems(List<VkMusic> items, boolean isRefreshing);
+        void deleteMusic(VkMusic music, int position);
         void showErrorToast(String message);
         ArrayList<VkMusic> getMusic();
         Activity getViewActivity();
@@ -29,5 +30,6 @@ public interface VkMusicFragmentContract {
 
     interface Presenter extends BaseMusicFragmentPresenter{
         void onLoadMusic(GetVkMusicBody requestBody, boolean isRefreshing);
+
     }
 }

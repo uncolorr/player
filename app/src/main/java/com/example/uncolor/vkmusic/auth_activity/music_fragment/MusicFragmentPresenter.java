@@ -46,6 +46,11 @@ public class MusicFragmentPresenter implements MusicFragmentContract.Presenter, 
 
     }
 
+    @Override
+    public void onDeleteTrack(BaseMusic music, int position) {
+
+    }
+
     private void showMessageAboutAuth() {
         MessageReporter.showMessageAboutAuth(context);
     }

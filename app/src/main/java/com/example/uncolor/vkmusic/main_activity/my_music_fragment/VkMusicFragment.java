@@ -15,6 +15,7 @@ import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.example.uncolor.vkmusic.Apis.request_bodies.GetVkMusicBody;
+import com.example.uncolor.vkmusic.IntentFilterManager;
 import com.example.uncolor.vkmusic.R;
 import com.example.uncolor.vkmusic.application.App;
 import com.example.uncolor.vkmusic.application.AppPermissionManager;
@@ -23,6 +24,7 @@ import com.example.uncolor.vkmusic.models.Music;
 import com.example.uncolor.vkmusic.models.VkMusic;
 import com.example.uncolor.vkmusic.music_adapter.MusicAdapter;
 import com.example.uncolor.vkmusic.services.MusicService;
+import com.example.uncolor.vkmusic.services.download.DownloadService;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EFragment;
@@ -30,6 +32,7 @@ import org.androidannotations.annotations.ViewById;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by Uncolor on 24.08.2018.
@@ -64,19 +67,31 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
                         false));
         presenter.onLoadMusic(getVkMusicBody, true);
         musicReceiver = getMusicReceiver();
-       getContext().registerReceiver(musicReceiver, MusicService.getMusicIntentFilter());
+        if (getContext() != null) {
+            getContext().registerReceiver(musicReceiver, IntentFilterManager.getMusicIntentFilter());
+        }
     }
 
     private BroadcastReceiver getMusicReceiver() {
         return new BroadcastReceiver() {
             @Override
             public void onReceive(Context context, Intent intent) {
-                App.Log("fragment on receive");
-                BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
-                if(music == null){
-                    return;
+                String action = intent.getAction();
+                if (Objects.equals(action, DownloadService.ACTION_DOWNLOAD_STARTED)) {
+                    BaseMusic music = intent.getParcelableExtra(DownloadService.ARG_MUSIC);
+                    musicAdapter.startDownloadMusic(music);
                 }
-                musicAdapter.changeCurrentMusic(music);
+                else if (Objects.equals(action, DownloadService.ACTION_DOWNLOAD_COMPLETED)) {
+                    BaseMusic music = intent.getParcelableExtra(DownloadService.ARG_MUSIC);
+                    musicAdapter.completeDownloadMusic(music);
+                }
+                else {
+                    BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
+                    if (music == null) {
+                        return;
+                    }
+                    musicAdapter.changeCurrentMusic(music);
+                }
             }
         };
     }
@@ -97,6 +112,20 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
             musicAdapter.clear();
         }
         musicAdapter.add(items);
+    }
+
+    @Override
+    public void deleteMusic(VkMusic music, int position) {
+        boolean fromCache = true;
+        musicAdapter.deleteTrack(music, position, fromCache);
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
+        if (getContext() != null) {
+            getContext().unregisterReceiver(musicReceiver);
+        }
     }
 
     @Override
