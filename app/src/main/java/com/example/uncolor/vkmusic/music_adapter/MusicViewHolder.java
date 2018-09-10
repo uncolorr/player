@@ -4,7 +4,9 @@ import android.support.v4.content.ContextCompat;
 import android.support.v7.widget.RecyclerView;
 import android.view.View;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
+import android.widget.ProgressBar;
 import android.widget.TextView;
 
 import com.example.uncolor.vkmusic.R;
@@ -25,6 +27,8 @@ public class MusicViewHolder extends RecyclerView.ViewHolder {
     private TextView textViewArtist;
     private TextView textViewTotalTime;
     private ImageButton imageButtonDownload;
+    private ImageView imageViewDownloaded;
+    private ProgressBar progressBarDownloading;
     private LinearLayout linearLayoutBackground;
     private BaseMusicFragmentPresenter presenter;
     private BaseMusic music;
@@ -37,6 +41,8 @@ public class MusicViewHolder extends RecyclerView.ViewHolder {
         textViewTotalTime = itemView.findViewById(R.id.textViewTotalTime);
         imageButtonDownload = itemView.findViewById(R.id.imageButtonDownload);
         linearLayoutBackground = itemView.findViewById(R.id.linearLayoutBackground);
+        imageViewDownloaded = itemView.findViewById(R.id.imageViewDownloaded);
+        progressBarDownloading  = itemView.findViewById(R.id.progressBarDownloading);
     }
 
     public void bind(BaseMusic music, BaseMusic currentMusic) {
@@ -46,6 +52,11 @@ public class MusicViewHolder extends RecyclerView.ViewHolder {
         textViewTotalTime.setText(DurationConverter.getDurationFormat(music.getDuration()));
         imageButtonDownload.setOnClickListener(getOnDownloadClickListener());
         linearLayoutBackground.setOnClickListener(getOnPlayClickListener());
+        bindTrackSelection(currentMusic);
+        bindState();
+    }
+
+    private void bindTrackSelection(BaseMusic currentMusic){
         if (currentMusic == null) {
             return;
         }
@@ -57,6 +68,30 @@ public class MusicViewHolder extends RecyclerView.ViewHolder {
                     R.drawable.track_not_selected_drawable));
         }
     }
+
+    private void bindState(){
+       switch (music.getState()){
+           case BaseMusic.STATE_DEFAULT:
+               imageViewDownloaded.setVisibility(View.GONE);
+               progressBarDownloading.setVisibility(View.GONE);
+               imageButtonDownload.setImageResource(R.drawable.download);
+               imageButtonDownload.setEnabled(true);
+               break;
+           case BaseMusic.STATE_DOWNLOADING:
+               imageViewDownloaded.setVisibility(View.GONE);
+               progressBarDownloading.setVisibility(View.VISIBLE);
+               imageButtonDownload.setImageResource(R.drawable.download);
+               imageButtonDownload.setEnabled(false);
+               break;
+           case BaseMusic.STATE_COMPLETED:
+               imageViewDownloaded.setVisibility(View.VISIBLE);
+               progressBarDownloading.setVisibility(View.GONE);
+               imageButtonDownload.setImageResource(R.drawable.ic_trash);
+               imageButtonDownload.setEnabled(true);
+               break;
+       }
+    }
+
 
     private View.OnClickListener getOnPlayClickListener() {
         return new View.OnClickListener() {
@@ -71,12 +106,12 @@ public class MusicViewHolder extends RecyclerView.ViewHolder {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if (music == null) {
-                    App.Log("null");
-                } else {
-                    App.Log("not null");
+                if(music.getState() == BaseMusic.STATE_COMPLETED){
+                    presenter.onDeleteTrack(music, getAdapterPosition());
                 }
-                presenter.onUploadTrack(music);
+                if(music.getState() == BaseMusic.STATE_DEFAULT) {
+                    presenter.onUploadTrack(music);
+                }
             }
         };
     }
