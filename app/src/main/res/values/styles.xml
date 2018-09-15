@@ -35,6 +35,13 @@
         <item name="android:background">@drawable/button_background</item>
     </style>
 
+    <style name="CaptchaButtonStyle" parent="@android:style/Widget.Button">
+        <item name="android:textColor">@android:color/white</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:background">@drawable/button_captcha_background</item>
+    </style>
+
     <style name="ButtonLightStyle" parent="@android:style/Widget.Button">
         <item name="android:textColor">@android:color/white</item>
         <item name="android:textSize">16sp</item>
@@ -51,6 +58,17 @@
         <item name="android:paddingStart">12dp</item>
         <item name="android:paddingEnd">12dp</item>
         <item name="android:background">@drawable/edit_text_drawable</item>
+    </style>
+
+    <style name="CaptchaEditTextStyle" parent="@android:style/Widget.EditText">
+        <item name="android:textColorHint">@color/colorGreyLight</item>
+        <item name="android:textColor">@color/colorMain</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textAllCaps">false</item>
+        <item name="android:singleLine">true</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:background">@drawable/edit_text_captcha_drawable</item>
     </style>
 
 
