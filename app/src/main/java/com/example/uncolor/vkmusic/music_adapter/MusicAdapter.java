@@ -14,6 +14,7 @@ import com.example.uncolor.vkmusic.models.VkMusic;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 
@@ -26,19 +27,27 @@ import io.realm.RealmResults;
 
 public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
 
+    public static final int MODE_CACHE = 1;
+    public static final int MODE_ALL_MUSIC = 2;
+
     private List<T> items = new ArrayList<>();
     private BaseMusicFragmentPresenter presenter;
     private BaseMusic currentMusic;
     private Realm realm;
+    private int mode;
 
     public MusicAdapter(BaseMusicFragmentPresenter presenter) {
         this.presenter = presenter;
         realm = Realm.getDefaultInstance();
+        this.mode = MODE_ALL_MUSIC;
     }
 
     public void add(List<T> musics) {
         this.items.addAll(musics);
         checkCache(musics);
+        if(mode == MODE_CACHE){
+            Collections.reverse(this.items);
+        }
         notifyDataSetChanged();
     }
 
@@ -61,6 +70,11 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
         }
     }
 
+    public void setAlbumImageUrl(String url, int position){
+        items.get(position).setAlbumImageUrl(url);
+        notifyItemChanged(position);
+    }
+
     public void completeDownloadMusic(BaseMusic music) {
         for (int i = 0; i < items.size(); i++) {
             if (Objects.equals(items.get(i).getDownload(), music.getDownload())) {
@@ -80,17 +94,23 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
     private void checkCache(List<T> musics) {
         if (!items.isEmpty()) {
             if (items.get(0) instanceof VkMusic) {
-                realm.beginTransaction();
+                if(!realm.isInTransaction()) {
+                    realm.beginTransaction();
+                }
                 RealmResults<VkMusic> results = realm.where(VkMusic.class).findAll();
                 for (int i = 0; i < musics.size(); i++) {
                     if (results.contains(musics.get(i))) {
                         VkMusic music = realm.where(VkMusic.class)
-                                .equalTo("url", musics.get(i).getDownload())
+                                .equalTo("id", musics.get(i).getId())
                                 .findFirst();
                         if (music != null) {
                             if (isFileExists(music.getLocalPath())) {
                                 musics.get(i).setLocalPath(music.getLocalPath());
                                 musics.get(i).setState(BaseMusic.STATE_COMPLETED);
+                            }
+                            else {
+                                music.deleteFromRealm();
+                                this.items.remove(i);
                             }
                         }
                     }
@@ -132,10 +152,8 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
         return items;
     }
 
-    public void deleteTrack(BaseMusic music, int position, boolean fromCache) {
-        App.Log("delete track");
+    public void deleteTrack(BaseMusic music, int position) {
         if (music instanceof VkMusic) {
-            App.Log("instanceof");
             File file = new File(music.getLocalPath());
             if (file.exists()) {
                 boolean isDeleted = file.delete();
@@ -146,19 +164,30 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
                             .findAll();
                     results.deleteAllFromRealm();
                     realm.commitTransaction();
-                    if(fromCache){
+                    if(mode == MODE_CACHE){
                         items.remove(position);
                         notifyItemRemoved(position);
                     }
-                    else {
+                    else if(mode == MODE_ALL_MUSIC){
                         items.get(position).setState(BaseMusic.STATE_DEFAULT);
                         notifyItemChanged(position);
                     }
                 }
             }
-
-
-
         }
     }
+
+    public void unselectCurrentTrack() {
+        currentMusic = null;
+        notifyDataSetChanged();
+    }
+
+    public void setMode(int mode) {
+        this.mode = mode;
+    }
+
+    public int getMode() {
+        return this.mode;
+    }
+
 }
