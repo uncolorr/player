@@ -1,11 +1,10 @@
 package com.example.uncolor.vkmusic.Apis;
 
 
+import com.example.uncolor.vkmusic.Apis.response_models.album_image_model.AlbumImageResponseModel;
 import com.example.uncolor.vkmusic.Apis.response_models.AuthResponseModel;
 import com.example.uncolor.vkmusic.Apis.response_models.MusicListResponseModel;
 import com.example.uncolor.vkmusic.Apis.response_models.VKMusicResponseModel;
-
-import org.json.JSONObject;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -13,9 +12,7 @@ import retrofit2.http.Field;
 import retrofit2.http.FormUrlEncoded;
 import retrofit2.http.GET;
 import retrofit2.http.Headers;
-import retrofit2.http.Multipart;
 import retrofit2.http.POST;
-import retrofit2.http.Part;
 import retrofit2.http.Query;
 import retrofit2.http.Streaming;
 import retrofit2.http.Url;
@@ -39,7 +36,7 @@ public interface ApiSource {
 
     @FormUrlEncoded
     @POST("https://audio.bigbadbird.ru/src/examples/example_microg.php")
-    Call<AuthResponseModel> login(@Field("login")String login,
+    Call<AuthResponseModel> login(@Field("login") String login,
                                   @Field("pass") String pass);
 
     @Headers("User-Agent: KateMobileAndroid/48.2 lite-433 (Android 8.1.0; SDK 27; arm64-v8a; Google Pixel 2 XL; en)")
@@ -48,6 +45,29 @@ public interface ApiSource {
                                           @Query("v") String v,
                                           @Query("offset") int offset,
                                           @Query("count") int count);
+
+    @Headers("User-Agent: KateMobileAndroid/48.2 lite-433 (Android 8.1.0; SDK 27; arm64-v8a; Google Pixel 2 XL; en)")
+    @GET("https://api.vk.com/method/audio.search")
+    Call<VKMusicResponseModel> searchVkMusic(@Query("access_token") String access_token,
+                                             @Query("q") CharSequence q,
+                                             @Query("v") String v,
+                                             @Query("offset") int offset,
+                                             @Query("count") int count);
+
+    @Headers("User-Agent: KateMobileAndroid/48.2 lite-433 (Android 8.1.0; SDK 27; arm64-v8a; Google Pixel 2 XL; en)")
+    @GET("https://api.vk.com/method/audio.search")
+    Call<VKMusicResponseModel> searchVkMusicWithCaptcha(@Query("access_token") String access_token,
+                                                        @Query("q") CharSequence q,
+                                                        @Query("v") String v,
+                                                        @Query("offset") int offset,
+                                                        @Query("count") int count,
+                                                        @Query("captcha_sid") String captchaSID,
+                                                        @Query("captcha_key") String captchaKey);
+
+    @GET("https://ws.audioscrobbler.com/2.0/?format=json&api_key=859dd05988e7df407c03d6cb74e41477&method=track.getInfo")
+    Call<AlbumImageResponseModel> getAlbumImage(@Query("artist") String artist,
+                                                @Query("track") String track);
+
 
 }
 

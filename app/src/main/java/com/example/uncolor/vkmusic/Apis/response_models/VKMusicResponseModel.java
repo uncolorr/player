@@ -1,10 +1,8 @@
 package com.example.uncolor.vkmusic.Apis.response_models;
 
-import com.example.uncolor.vkmusic.models.Music;
-import com.example.uncolor.vkmusic.models.VkMusic;
-import com.google.gson.annotations.SerializedName;
+import android.support.annotation.Nullable;
 
-import java.util.List;
+import com.google.gson.annotations.SerializedName;
 
 /**
  * Created by Uncolor on 04.09.2018.
@@ -12,10 +10,20 @@ import java.util.List;
 
 public class VKMusicResponseModel {
 
+    @Nullable
     @SerializedName("response")
     private VkResponse response;
 
+    @Nullable
+    @SerializedName("error")
+    private CaptchaErrorResponse error;
+
     public VkResponse getResponse() {
         return response;
+    }
+
+    @Nullable
+    public CaptchaErrorResponse getError() {
+        return error;
     }
 }
