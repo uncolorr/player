@@ -1,11 +1,13 @@
 package com.example.uncolor.vkmusic.auth_activity.auth_fragment;
 
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.widget.EditText;
 
 import com.example.uncolor.vkmusic.R;
 import com.example.uncolor.vkmusic.main_activity.MainActivity;
+import com.example.uncolor.vkmusic.services.MusicService;
 import com.example.uncolor.vkmusic.utils.LoadingDialog;
 import com.example.uncolor.vkmusic.utils.MessageReporter;
 
@@ -72,6 +74,7 @@ public class AuthFragment extends Fragment implements AuthFragmentContract.View{
 
     @Override
     public void login() {
+        getActivity().stopService(new Intent(getContext(), MusicService.class));
         getActivity().finish();
         startActivity(MainActivity.getInstance(getContext()));
     }
