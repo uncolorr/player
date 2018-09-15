@@ -1,6 +1,10 @@
 package com.example.uncolor.vkmusic;
 
+import com.example.uncolor.vkmusic.models.VkMusic;
+
 import org.junit.Test;
+
+import java.util.Objects;
 
 import static org.junit.Assert.*;
 
@@ -12,6 +16,13 @@ import static org.junit.Assert.*;
 public class ExampleUnitTest {
     @Test
     public void addition_isCorrect() throws Exception {
-        assertEquals(4, 2 + 2);
+        VkMusic vkMusic1 = new VkMusic();
+        VkMusic vkMusic2 = new VkMusic();
+
+        vkMusic1.setId(4533);
+        vkMusic2.setId(4533);
+
+        boolean isEquals = Objects.equals(vkMusic1, vkMusic2);
+        assertEquals(isEquals, true);
     }
 }
