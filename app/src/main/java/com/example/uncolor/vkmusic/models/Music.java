@@ -41,6 +41,8 @@ public class Music implements BaseMusic {
 
     private String localPath;
 
+    private String albumImageUrl;
+
     private int state;
 
     public Music(){
@@ -57,6 +59,7 @@ public class Music implements BaseMusic {
         download = in.readString();
         stream = in.readString();
         localPath = in.readString();
+        albumImageUrl = in.readString();
         state = in.readInt();
     }
 
@@ -71,6 +74,11 @@ public class Music implements BaseMusic {
             return new Music[size];
         }
     };
+
+    @Override
+    public long getId() {
+        return 0;
+    }
 
     @Override
     public String getArtist() {
@@ -112,6 +120,15 @@ public class Music implements BaseMusic {
         this.state = state;
     }
 
+    @Override
+    public String getAlbumImageUrl() {
+        return albumImageUrl;
+    }
+
+    @Override
+    public void setAlbumImageUrl(String url) {
+        this.albumImageUrl = url;
+    }
 
     @Override
     public int describeContents() {
@@ -130,6 +147,7 @@ public class Music implements BaseMusic {
         dest.writeString(download);
         dest.writeString(stream);
         dest.writeString(localPath);
+        dest.writeString(albumImageUrl);
         dest.writeInt(state);
     }
 

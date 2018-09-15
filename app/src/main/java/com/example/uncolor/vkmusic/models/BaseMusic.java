@@ -17,7 +17,9 @@ public interface BaseMusic extends Parcelable {
      static final int STATE_DEFAULT = 0;
      static final int STATE_DOWNLOADING = 1;
      static final int STATE_COMPLETED = 2;
-     
+
+
+     long getId();
      String getArtist();
      String getTitle();
      int getDuration();
@@ -26,4 +28,6 @@ public interface BaseMusic extends Parcelable {
      void setLocalPath(String localPath);
      int getState();
      void setState(int state);
+     String getAlbumImageUrl();
+     void setAlbumImageUrl(String url);
 }

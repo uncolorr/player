@@ -14,7 +14,10 @@ import io.realm.RealmObject;
  * Created by Uncolor on 04.09.2018.
  */
 
-public class VkMusic extends RealmObject implements BaseMusic {
+public class VkMusic extends RealmObject implements BaseMusic{
+
+    @SerializedName("id")
+    private long id;
 
     @SerializedName("artist")
     private String artist;
@@ -30,6 +33,8 @@ public class VkMusic extends RealmObject implements BaseMusic {
 
     private String localPath;
 
+    private String albumImageUrl;
+
     private int state;
 
 
@@ -38,11 +43,13 @@ public class VkMusic extends RealmObject implements BaseMusic {
     }
 
     protected VkMusic(Parcel in) {
+        id = in.readLong();
         artist = in.readString();
         title = in.readString();
         duration = in.readInt();
         url = in.readString();
         localPath = in.readString();
+        albumImageUrl = in.readString();
         state = in.readInt();
     }
 
@@ -57,6 +64,16 @@ public class VkMusic extends RealmObject implements BaseMusic {
             return new VkMusic[size];
         }
     };
+
+    public void setId(long id) {
+        this.id = id;
+    }
+
+
+    @Override
+    public long getId() {
+        return id;
+    }
 
     @Override
     public String getArtist() {
@@ -106,13 +123,26 @@ public class VkMusic extends RealmObject implements BaseMusic {
     @Override
     public void writeToParcel(Parcel dest, int flags) {
 
+        dest.writeLong(id);
         dest.writeString(artist);
         dest.writeString(title);
         dest.writeInt(duration);
         dest.writeString(url);
         dest.writeString(localPath);
+        dest.writeString(albumImageUrl);
         dest.writeInt(state);
     }
+
+    @Override
+    public String getAlbumImageUrl() {
+        return albumImageUrl;
+    }
+
+    @Override
+    public void setAlbumImageUrl(String url) {
+        this.albumImageUrl = url;
+    }
+
 
     @Override
     public boolean equals(Object obj) {
@@ -122,11 +152,11 @@ public class VkMusic extends RealmObject implements BaseMusic {
             return false;
         }
         VkMusic music = (VkMusic) obj;
-        return Objects.equals(music.getDownload(), url);
+        return music.getId() == id;
     }
 
     @Override
     public int hashCode() {
-        return url.hashCode();
+        return Long.valueOf(id).hashCode();
     }
 }
