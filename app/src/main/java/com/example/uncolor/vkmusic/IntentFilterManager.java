@@ -19,6 +19,7 @@ public class IntentFilterManager {
         intentFilter.addAction(MusicService.ACTION_PAUSE_OR_RESUME);
         intentFilter.addAction(MusicService.ACTION_PLAYER_RESUME);
         intentFilter.addAction(MusicService.ACTION_BEGIN_PLAYING);
+        intentFilter.addAction(MusicService.ACTION_CLOSE);
         intentFilter.addAction(DownloadService.ACTION_DOWNLOAD_FAILURE);
         intentFilter.addAction(DownloadService.ACTION_DOWNLOAD_COMPLETED);
         intentFilter.addAction(DownloadService.ACTION_DOWNLOAD_STARTED);
