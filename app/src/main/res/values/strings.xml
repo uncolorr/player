@@ -14,4 +14,10 @@
     <string name="label_enter_captcha">Введите текст с картинки</string>
     <string name="label_button_send">Отправить</string>
     <string name="hint_edit_text_captcha">Капча</string>
+    <string name="title_settings">Настройки</string>
+    <string name="label_clear_cache">Очистить кэш</string>
+    <string name="label_contact_developers">Связаться с разработчиками</string>
+    <string name="label_website">Перейти на сайт разработчиков</string>
+    <string name="label_politics">Политика конфиденциальности</string>
+    <string name="label_exit">Выход</string>
 </resources>

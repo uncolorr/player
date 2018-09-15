@@ -7,4 +7,5 @@
     <color name="colorMainLight">#334F78A3</color>
     <color name="colorAuthActionBar">#4A76A8</color>
     <color name="colorGreyLight">#D8D8D8</color>
+    <color name="colorSettingsBackground">#F1F1F1</color>
 </resources>
