@@ -16,6 +16,7 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
 import com.example.uncolor.vkmusic.IntentFilterManager;
 import com.example.uncolor.vkmusic.R;
 import com.example.uncolor.vkmusic.application.App;
@@ -31,6 +32,8 @@ import org.androidannotations.annotations.EActivity;
 import org.androidannotations.annotations.ViewById;
 
 import java.util.Objects;
+
+import javax.microedition.khronos.opengles.GL;
 
 @EActivity(R.layout.activity_main)
 public class MainActivity extends AppCompatActivity implements
@@ -50,6 +53,9 @@ public class MainActivity extends AppCompatActivity implements
 
     @ViewById
     SquareImageView imageViewMusicPlate;
+
+    @ViewById
+    SquareImageView imageViewPanelAlbum;
 
     @ViewById
     TextView textViewPanelArtist;
@@ -107,6 +113,7 @@ public class MainActivity extends AppCompatActivity implements
         adapter = new MainPagerAdapter(getSupportFragmentManager());
         viewPager.setAdapter(adapter);
         viewPager.setOffscreenPageLimit(3);
+        viewPager.setPagingEnabled(false);
         musicReceiver = getMusicReceiver();
         registerReceiver(musicReceiver, IntentFilterManager.getMusicIntentFilter());
         handler = new Handler();
@@ -234,10 +241,8 @@ public class MainActivity extends AppCompatActivity implements
                     int playbackPosition = intent.getIntExtra(MusicService.ARG_PLAYBACK_POSITION, 0);
                     BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
                     if (isPause) {
-                        App.Log("isPause");
                         hidePlayerPanel();
                     } else {
-                        App.Log("not isPause");
                         showPlayerPanel();
                         setSongDescriptions(music);
                         setPauseButtons();
@@ -252,6 +257,12 @@ public class MainActivity extends AppCompatActivity implements
                     setPauseButtons();
                     setPlaybackPosition(0);
                     handler.post(musicPositionRunnable);
+                }
+
+                if (Objects.equals(action, MusicService.ACTION_CLOSE)) {
+                    App.Log("Action close received");
+                    handler.removeCallbacks(musicPositionRunnable);
+                    hidePlayerPanel();
                 }
 
             }
@@ -286,12 +297,23 @@ public class MainActivity extends AppCompatActivity implements
         musicDuration = music.getDuration();
         textViewDuration.setText(DurationConverter.getDurationFormat(music.getDuration()));
         setDurationForBars(music.getDuration());
+        setAlbumImage(music.getAlbumImageUrl());
     }
 
     private void setPlaybackPosition(int playbackPosition) {
         musicProgressPosition = playbackPosition;
         progressBarMusic.setProgress(playbackPosition);
         seekBar.setProgress(playbackPosition);
+    }
+
+    public void setAlbumImage(String url){
+        if(url == null){
+            imageViewMusicPlate.setImageResource(R.drawable.album_default);
+            imageViewPanelAlbum.setImageResource(R.drawable.album_default);
+            return;
+        }
+        Glide.with(this).load(url).into(imageViewMusicPlate);
+        Glide.with(this).load(url).into(imageViewPanelAlbum);
 
     }
 
