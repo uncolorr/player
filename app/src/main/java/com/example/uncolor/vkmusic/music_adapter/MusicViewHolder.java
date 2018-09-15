@@ -9,8 +9,9 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.TextView;
 
+import com.bumptech.glide.Glide;
+import com.example.uncolor.vkmusic.Apis.ApiResponse;
 import com.example.uncolor.vkmusic.R;
-import com.example.uncolor.vkmusic.application.App;
 import com.example.uncolor.vkmusic.auth_activity.music_fragment.BaseMusicFragmentPresenter;
 import com.example.uncolor.vkmusic.models.BaseMusic;
 import com.example.uncolor.vkmusic.utils.DurationConverter;
@@ -21,13 +22,14 @@ import java.util.Objects;
  * Created by Uncolor on 25.08.2018.
  */
 
-public class MusicViewHolder extends RecyclerView.ViewHolder {
+public class MusicViewHolder extends RecyclerView.ViewHolder implements ApiResponse.ApiFailureListener{
 
     private TextView textViewSongTitle;
     private TextView textViewArtist;
     private TextView textViewTotalTime;
     private ImageButton imageButtonDownload;
     private ImageView imageViewDownloaded;
+    private ImageView imageViewAlbum;
     private ProgressBar progressBarDownloading;
     private LinearLayout linearLayoutBackground;
     private BaseMusicFragmentPresenter presenter;
@@ -42,6 +44,7 @@ public class MusicViewHolder extends RecyclerView.ViewHolder {
         imageButtonDownload = itemView.findViewById(R.id.imageButtonDownload);
         linearLayoutBackground = itemView.findViewById(R.id.linearLayoutBackground);
         imageViewDownloaded = itemView.findViewById(R.id.imageViewDownloaded);
+        imageViewAlbum = itemView.findViewById(R.id.imageViewAlbum);
         progressBarDownloading  = itemView.findViewById(R.id.progressBarDownloading);
     }
 
@@ -54,6 +57,15 @@ public class MusicViewHolder extends RecyclerView.ViewHolder {
         linearLayoutBackground.setOnClickListener(getOnPlayClickListener());
         bindTrackSelection(currentMusic);
         bindState();
+        if(this.music.getAlbumImageUrl() == null) {
+            imageViewAlbum.setImageResource(R.drawable.album_default);
+            presenter.onFindAlbumImageUrl(this.music, getAdapterPosition());
+        }
+        else {
+            Glide.with(itemView.getContext())
+                    .load(this.music.getAlbumImageUrl())
+                    .into(imageViewAlbum);
+        }
     }
 
     private void bindTrackSelection(BaseMusic currentMusic){
@@ -68,6 +80,7 @@ public class MusicViewHolder extends RecyclerView.ViewHolder {
                     R.drawable.track_not_selected_drawable));
         }
     }
+
 
     private void bindState(){
        switch (music.getState()){
@@ -109,7 +122,7 @@ public class MusicViewHolder extends RecyclerView.ViewHolder {
                 if(music.getState() == BaseMusic.STATE_COMPLETED){
                     presenter.onDeleteTrack(music, getAdapterPosition());
                 }
-                if(music.getState() == BaseMusic.STATE_DEFAULT) {
+                else if(music.getState() == BaseMusic.STATE_DEFAULT) {
                     presenter.onUploadTrack(music);
                 }
             }
@@ -117,4 +130,8 @@ public class MusicViewHolder extends RecyclerView.ViewHolder {
     }
 
 
+    @Override
+    public void onFailure(int code, String message) {
+
+    }
 }
