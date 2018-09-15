@@ -1,9 +1,12 @@
 package com.example.uncolor.vkmusic.auth_activity.music_fragment;
 
+import android.support.annotation.ArrayRes;
+
 import com.example.uncolor.vkmusic.Apis.request_bodies.GetMusicRequestBody;
 import com.example.uncolor.vkmusic.Apis.request_bodies.GetVkMusicBody;
 import com.example.uncolor.vkmusic.models.Music;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -15,6 +18,8 @@ public interface MusicFragmentContract {
     interface View{
         void showProgress();
         void hideProgress();
+        ArrayList<Music> getMusic();
+        void setAlbumImageForMusic(String url, int position);
         void setMusicItems(List<Music> items, boolean isRefreshing);
     }
 

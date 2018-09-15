@@ -1,21 +1,35 @@
 package com.example.uncolor.vkmusic.auth_activity.music_fragment;
 
+import android.content.BroadcastReceiver;
+import android.content.Context;
+import android.content.Intent;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.view.View;
+import android.widget.EditText;
 import android.widget.ProgressBar;
 
 import com.example.uncolor.vkmusic.Apis.request_bodies.GetMusicRequestBody;
+import com.example.uncolor.vkmusic.IntentFilterManager;
 import com.example.uncolor.vkmusic.R;
+import com.example.uncolor.vkmusic.application.App;
+import com.example.uncolor.vkmusic.models.BaseMusic;
 import com.example.uncolor.vkmusic.models.Music;
 import com.example.uncolor.vkmusic.music_adapter.MusicAdapter;
+import com.example.uncolor.vkmusic.services.MusicService;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EFragment;
 import org.androidannotations.annotations.ViewById;
 
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 
 /**
  * Created by Uncolor on 04.09.2018.
@@ -30,21 +44,92 @@ public class MusicFragment extends Fragment implements MusicFragmentContract.Vie
     @ViewById
     RecyclerView recyclerViewMusic;
 
+    @ViewById
+    EditText editTextSearch;
+
     private MusicFragmentContract.Presenter presenter;
 
-    private MusicAdapter<Music> adapter;
+    private MusicAdapter<Music> musicAdapter;
 
     private GetMusicRequestBody getMusicRequestBody;
 
+    private BroadcastReceiver musicReceiver;
+
+    private Runnable searchRunnable;
+
     @AfterViews
-    void init(){
+    void init() {
         getMusicRequestBody = new GetMusicRequestBody();
-        presenter = new MusicFragmentPresenter(getContext(),  this);
-        adapter = new MusicAdapter<>(presenter);
+        presenter = new MusicFragmentPresenter(getContext(), this);
+        musicAdapter = new MusicAdapter<>(presenter);
         recyclerViewMusic.setLayoutManager(new LinearLayoutManager(getContext(),
                 LinearLayoutManager.VERTICAL, false));
-        recyclerViewMusic.setAdapter(adapter);
+        recyclerViewMusic.setAdapter(musicAdapter);
         presenter.onLoadMusic(getMusicRequestBody, true);
+        musicReceiver = getMusicReceiver();
+        searchRunnable = getSearchRunnable();
+        editTextSearch.addTextChangedListener(getSearchTextWatcher());
+        getContext().registerReceiver(musicReceiver, IntentFilterManager.getMusicIntentFilter());
+    }
+
+    private BroadcastReceiver getMusicReceiver() {
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                App.Log("on fragment receive");
+                String action = intent.getAction();
+                if (Objects.equals(action, MusicService.ACTION_CLOSE)) {
+                    musicAdapter.unselectCurrentTrack();
+                } else {
+                    BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
+                    if (music == null) {
+                        return;
+                    }
+                    musicAdapter.changeCurrentMusic(music);
+                }
+            }
+        };
+    }
+
+    private TextWatcher getSearchTextWatcher() {
+        return new TextWatcher() {
+            @Override
+            public void onTextChanged(CharSequence q, int start, int before, int count) {
+                getMusicRequestBody.setQuery(q.toString());
+            }
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {
+
+            }
+
+            private Timer timer = new Timer();
+            private final long DELAY = 500; // milliseconds
+
+            @Override
+            public void afterTextChanged(final Editable s) {
+                timer.cancel();
+                timer = new Timer();
+                timer.schedule(
+                        new TimerTask() {
+                            @Override
+                            public void run() {
+                                if (getActivity() != null) {
+                                    getActivity().runOnUiThread(searchRunnable);
+                                }
+                            }
+                        }, DELAY);
+            }
+        };
+    }
+
+    private Runnable getSearchRunnable() {
+        return new Runnable() {
+            @Override
+            public void run() {
+                presenter.onLoadMusic(getMusicRequestBody, true);
+            }
+        };
     }
 
     @Override
@@ -58,10 +143,20 @@ public class MusicFragment extends Fragment implements MusicFragmentContract.Vie
     }
 
     @Override
+    public ArrayList<Music> getMusic() {
+        return (ArrayList<Music>) musicAdapter.getItems();
+    }
+
+    @Override
+    public void setAlbumImageForMusic(String url, int position) {
+        musicAdapter.setAlbumImageUrl(url, position);
+    }
+
+    @Override
     public void setMusicItems(List<Music> items, boolean isRefreshing) {
-        if(isRefreshing){
-            adapter.clear();
+        if (isRefreshing) {
+            musicAdapter.clear();
         }
-        adapter.add(items);
+        musicAdapter.add(items);
     }
 }

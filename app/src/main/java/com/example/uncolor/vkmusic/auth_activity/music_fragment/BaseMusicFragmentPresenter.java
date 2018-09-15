@@ -14,5 +14,6 @@ public interface BaseMusicFragmentPresenter {
     void onUploadTrack(BaseMusic music);
     void onPlayTrack(BaseMusic music, int position);
     void onDeleteTrack(BaseMusic music, int position);
+    void onFindAlbumImageUrl(BaseMusic music, int position);
 
 }

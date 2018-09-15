@@ -1,15 +1,21 @@
 package com.example.uncolor.vkmusic.auth_activity.music_fragment;
 
 import android.content.Context;
+import android.content.Intent;
 
 import com.example.uncolor.vkmusic.Apis.Api;
 import com.example.uncolor.vkmusic.Apis.ApiResponse;
 import com.example.uncolor.vkmusic.Apis.request_bodies.GetMusicRequestBody;
-import com.example.uncolor.vkmusic.Apis.request_bodies.GetVkMusicBody;
+import com.example.uncolor.vkmusic.Apis.response_models.album_image_model.AlbumImageResponseModel;
+import com.example.uncolor.vkmusic.Apis.response_models.album_image_model.ImageInfo;
 import com.example.uncolor.vkmusic.Apis.response_models.MusicListResponseModel;
 import com.example.uncolor.vkmusic.models.BaseMusic;
+import com.example.uncolor.vkmusic.services.MusicService;
 import com.example.uncolor.vkmusic.utils.MessageReporter;
-import com.example.uncolor.vkmusic.models.Music;
+
+import java.io.IOException;
+import java.util.List;
+import java.util.Objects;
 
 /**
  * Created by Uncolor on 04.09.2018.
@@ -43,7 +49,12 @@ public class MusicFragmentPresenter implements MusicFragmentContract.Presenter, 
 
     @Override
     public void onPlayTrack(BaseMusic music, int position) {
-
+        Intent intent = new Intent(context, MusicService.class);
+        intent.setAction(MusicService.ACTION_PLAY);
+        intent.putExtra(MusicService.ARG_MUSIC, music);
+        intent.putParcelableArrayListExtra(MusicService.ARG_PLAYLIST, view.getMusic());
+        intent.putExtra(MusicService.ARG_POSITION, position);
+        context.startService(intent);
     }
 
     @Override
@@ -51,6 +62,31 @@ public class MusicFragmentPresenter implements MusicFragmentContract.Presenter, 
 
     }
 
+    @Override
+    public void onFindAlbumImageUrl(BaseMusic music, int position) {
+        Api.getSource().getAlbumImage(music.getArtist(), music.getTitle())
+                .enqueue(ApiResponse.getCallback(getFindAlbumImageCallback(position), this));
+    }
+
+    private ApiResponse.ApiResponseListener<AlbumImageResponseModel> getFindAlbumImageCallback(final int position) {
+        return new ApiResponse.ApiResponseListener<AlbumImageResponseModel>() {
+            @Override
+            public void onResponse(AlbumImageResponseModel result) throws IOException {
+                if(result.getTrack() == null){
+                    return;
+                }
+                if(result.getTrack().getAlbum() != null) {
+                    List<ImageInfo> images = result.getTrack().getAlbum().getImages();
+                    for (int i = 0; i < images.size(); i++) {
+                        if (Objects.equals(images.get(i).getSize(), "extralarge")) {
+                            view.setAlbumImageForMusic(images.get(i).getUrl(), position);
+                        }
+                    }
+                }
+
+            }
+        };
+    }
     private void showMessageAboutAuth() {
         MessageReporter.showMessageAboutAuth(context);
     }
