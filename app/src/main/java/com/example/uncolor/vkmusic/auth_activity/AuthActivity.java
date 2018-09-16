@@ -102,6 +102,11 @@ public class AuthActivity extends AppCompatActivity implements
     private Handler handler;
 
 
+    public static Intent getInstance(Context context){
+        return new Intent(context, AuthActivity_.class);
+    }
+
+
     @AfterViews
     void init(){
         sheetBehavior = BottomSheetBehavior.from(bigPlayerPanel);
