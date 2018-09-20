@@ -3,10 +3,12 @@ package com.example.uncolor.vkmusic.main_activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.PorterDuff;
 import android.os.Handler;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
@@ -73,6 +75,12 @@ public class MainActivity extends AppCompatActivity implements
     ImageButton imageButtonPanelPlay;
 
     @ViewById
+    ImageButton imageButtonRepeat;
+
+    @ViewById
+    ImageButton imageButtonShuffle;
+
+    @ViewById
     ImageButton imageButtonPlayerPlay;
 
     @ViewById
@@ -100,6 +108,10 @@ public class MainActivity extends AppCompatActivity implements
     private int musicProgressPosition;
 
     private int musicDuration;
+
+    private boolean isLooping;
+
+    private boolean isShuffling;
 
     public static Intent getInstance(Context context) {
         return new Intent(context, MainActivity_.class);
@@ -130,6 +142,28 @@ public class MainActivity extends AppCompatActivity implements
     void onImageButtonHideClick() {
         hidePlayer();
     }
+
+    @Click(R.id.imageButtonRepeat)
+    void onRepeatButtonClick(){
+        isLooping = !isLooping;
+        Intent intent = new Intent(this, MusicService.class);
+        intent.setAction(MusicService.ACTION_CHANGE_LOOPING);
+        intent.putExtra(MusicService.ARG_IS_LOOPING, isLooping);
+        startService(intent);
+        changeRepeatButtonState();
+    }
+
+    @Click(R.id.imageButtonShuffle)
+    void onShuffleButtonClick(){
+        isShuffling = !isShuffling;
+        Intent intent = new Intent(this, MusicService.class);
+        intent.setAction(MusicService.ACTION_SHUFFLE_PLAYLIST);
+        intent.putExtra(MusicService.ARG_IS_SHUFFLING, isShuffling);
+        startService(intent);
+        changeShuffleButtonState();
+    }
+
+
 
     @Click({R.id.imageButtonPanelPlay, R.id.imageButtonPlayerPlay})
     void onPlayButtonClick() {
@@ -177,6 +211,11 @@ public class MainActivity extends AppCompatActivity implements
         super.onBackPressed();
     }
 
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unregisterReceiver(musicReceiver);
+    }
 
     private Runnable getMusicPositionRunnable() {
         return new Runnable() {
@@ -199,8 +238,13 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onReceive(Context context, Intent intent) {
                 App.Log("onReceive");
+                if(intent == null){
+                    App.Log("intent null");
+                }
                 String action = intent.getAction();
+                App.Log("point");
                 if (Objects.equals(action, MusicService.ACTION_PLAY)) {
+                    App.Log("On Action play");
                     BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
                     setSongDescriptions(music);
                     setPauseButtons();
@@ -210,6 +254,7 @@ public class MainActivity extends AppCompatActivity implements
                 }
 
                 if (Objects.equals(action, MusicService.ACTION_PAUSE_OR_RESUME)) {
+                    App.Log("On Action pause or resume");
                     boolean isPause = intent.getBooleanExtra(MusicService.ARG_IS_PAUSE, true);
                     if (isPause) {
                         setPlayButtons();
@@ -221,6 +266,7 @@ public class MainActivity extends AppCompatActivity implements
                 }
 
                 if (Objects.equals(action, MusicService.ACTION_NEXT)) {
+                    App.Log("On Action next");
                     BaseMusic music = intent.getParcelableExtra("music");
                     setSongDescriptions(music);
                     setPauseButtons();
@@ -229,6 +275,7 @@ public class MainActivity extends AppCompatActivity implements
                 }
 
                 if (Objects.equals(action, MusicService.ACTION_PREVIOUS)) {
+                    App.Log("On Action previous");
                     BaseMusic music = intent.getParcelableExtra("music");
                     setSongDescriptions(music);
                     setPauseButtons();
@@ -237,9 +284,12 @@ public class MainActivity extends AppCompatActivity implements
                 }
 
                 if (Objects.equals(action, MusicService.ACTION_PLAYER_RESUME)) {
+                    App.Log("On Action player resume");
                     boolean isPause = intent.getBooleanExtra(MusicService.ARG_IS_PAUSE, true);
                     int playbackPosition = intent.getIntExtra(MusicService.ARG_PLAYBACK_POSITION, 0);
                     BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
+                    isLooping = intent.getBooleanExtra(MusicService.ARG_IS_LOOPING, false);
+                    changeRepeatButtonState();
                     if (isPause) {
                         hidePlayerPanel();
                     } else {
@@ -253,6 +303,7 @@ public class MainActivity extends AppCompatActivity implements
                 }
 
                 if (Objects.equals(action, MusicService.ACTION_BEGIN_PLAYING)) {
+                    App.Log("On Action begin playing");
                     handler.removeCallbacks(musicPositionRunnable);
                     setPauseButtons();
                     setPlaybackPosition(0);
@@ -260,13 +311,49 @@ public class MainActivity extends AppCompatActivity implements
                 }
 
                 if (Objects.equals(action, MusicService.ACTION_CLOSE)) {
-                    App.Log("Action close received");
+                    App.Log("on Action close");
                     handler.removeCallbacks(musicPositionRunnable);
                     hidePlayerPanel();
                 }
 
             }
         };
+    }
+
+    private void changeRepeatButtonState() {
+        if (isLooping) {
+            imageButtonRepeat.setBackground(ContextCompat.getDrawable(this,
+                    R.drawable.button_repeat_activated));
+            imageButtonRepeat.setColorFilter(ContextCompat.getColor(
+                    this,
+                    android.R.color.white),
+                    PorterDuff.Mode.SRC_IN);
+        } else {
+            imageButtonRepeat.setBackground(ContextCompat.getDrawable(this,
+                    R.drawable.button_repeat_not_activated));
+            imageButtonRepeat.setColorFilter(ContextCompat.getColor(
+                    this,
+                    R.color.colorMain),
+                    PorterDuff.Mode.SRC_IN);
+        }
+    }
+
+    private void changeShuffleButtonState() {
+        if (isShuffling) {
+            imageButtonShuffle.setBackground(ContextCompat.getDrawable(this,
+                    R.drawable.button_repeat_activated));
+            imageButtonShuffle.setColorFilter(ContextCompat.getColor(
+                    this,
+                    android.R.color.white),
+                    PorterDuff.Mode.SRC_IN);
+        } else {
+            imageButtonShuffle.setBackground(ContextCompat.getDrawable(this,
+                    R.drawable.button_repeat_not_activated));
+            imageButtonShuffle.setColorFilter(ContextCompat.getColor(
+                    this,
+                    R.color.colorMain),
+                    PorterDuff.Mode.SRC_IN);
+        }
     }
 
     private void showPlayerPanel() {
@@ -306,8 +393,8 @@ public class MainActivity extends AppCompatActivity implements
         seekBar.setProgress(playbackPosition);
     }
 
-    public void setAlbumImage(String url){
-        if(url == null){
+    public void setAlbumImage(String url) {
+        if (url == null) {
             imageViewMusicPlate.setImageResource(R.drawable.album_default);
             imageViewPanelAlbum.setImageResource(R.drawable.album_default);
             return;
@@ -356,7 +443,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
-        if(fromUser){
+        if (fromUser) {
             App.Log("progress: " + Integer.toString(progress));
             setPlaybackPosition(progress);
             Intent intent = new Intent(this, MusicService.class);
