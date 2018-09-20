@@ -70,9 +70,21 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
     @Override
     protected void onHandleIntent(Intent intent) {
         App.Log("onHandleIntent service");
+        if(music == null){
+            return;
+        }
+        String artist = "";
+        String title = "";
+        if(music.getArtist() != null){
+            artist = music.getArtist();
+        }
+
+        if(music.getTitle() != null){
+            title = music.getTitle();
+        }
         File outputFile = new File(Environment
                         .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                        music.getArtist() + " - " + music.getTitle() + ".mp3");
+                        artist + " - " + title + ".mp3");
         String uriFromFile = Uri.fromFile(outputFile).toString();
         App.Log("Uri from file: " + uriFromFile);
         Uri uri = FileProvider.getUriForFile(getApplicationContext(),
@@ -107,10 +119,19 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
         byte data[] = new byte[1024 * 4];
         long fileSize = body.contentLength();
         InputStream bis = new BufferedInputStream(body.byteStream(), 1024 * 8);
+        String artist = "";
+        String title = "";
+        if(music.getArtist() != null){
+            artist = music.getArtist();
+        }
+
+        if(music.getTitle() != null){
+            title = music.getTitle();
+        }
         File outputFile =
                 new File(Environment
                         .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                        music.getArtist() + " - " + music.getTitle() + ".mp3");
+                        artist + " - " + title + ".mp3");
         App.Log("bbb: " + outputFile.getAbsolutePath());
         OutputStream output = new FileOutputStream(outputFile);
         long total = 0;
