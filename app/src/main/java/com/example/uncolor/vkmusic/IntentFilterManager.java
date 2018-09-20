@@ -2,6 +2,7 @@ package com.example.uncolor.vkmusic;
 
 import android.content.IntentFilter;
 
+import com.example.uncolor.vkmusic.main_activity.settings_fragment.SettingsFragment;
 import com.example.uncolor.vkmusic.models.Music;
 import com.example.uncolor.vkmusic.services.MusicService;
 import com.example.uncolor.vkmusic.services.download.DownloadService;
@@ -23,6 +24,7 @@ public class IntentFilterManager {
         intentFilter.addAction(DownloadService.ACTION_DOWNLOAD_FAILURE);
         intentFilter.addAction(DownloadService.ACTION_DOWNLOAD_COMPLETED);
         intentFilter.addAction(DownloadService.ACTION_DOWNLOAD_STARTED);
+        intentFilter.addAction(SettingsFragment.ACTION_CLEAR_CACHE);
         return intentFilter;
     }
 }
