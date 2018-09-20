@@ -9,6 +9,7 @@ import android.graphics.Color;
 import android.util.Log;
 
 import com.example.uncolor.vkmusic.Apis.Api;
+import com.flurry.android.FlurryAgent;
 
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
@@ -19,6 +20,7 @@ import io.realm.RealmConfiguration;
 
 public class App extends Application {
 
+    private static final String FLURRY_API_KEY = "K3F4DFDFGW2WWSVNBHH6";
     private static App instance;
     public static final String APP_SETTINGS = "app_settings";
     public static final String APP_PREFERENCES_TOKEN = "app_token";
@@ -28,6 +30,11 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
+
+        new FlurryAgent.Builder()
+                .withLogEnabled(true)
+                .build(this, FLURRY_API_KEY);
+
         Api.init();
         instance = this;
         settings = getSharedPreferences(APP_SETTINGS, Context.MODE_PRIVATE);
@@ -68,6 +75,7 @@ public class App extends Application {
         editor.remove(APP_PREFERENCES_TOKEN);
         editor.apply();
     }
+
 
     public static String getProviderAuthority() {
         return "com.example.uncolor.vkmusic.fileprovider";

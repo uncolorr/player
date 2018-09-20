@@ -15,6 +15,7 @@ import com.example.uncolor.vkmusic.R;
 import com.example.uncolor.vkmusic.auth_activity.music_fragment.BaseMusicFragmentPresenter;
 import com.example.uncolor.vkmusic.models.BaseMusic;
 import com.example.uncolor.vkmusic.utils.DurationConverter;
+import com.flurry.android.FlurryAgent;
 
 import java.util.Objects;
 
@@ -110,6 +111,7 @@ public class MusicViewHolder extends RecyclerView.ViewHolder implements ApiRespo
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
+                FlurryAgent.logEvent(itemView.getContext().getString(R.string.log_play_track));
                 presenter.onPlayTrack(music, getAdapterPosition());
             }
         };
@@ -123,6 +125,7 @@ public class MusicViewHolder extends RecyclerView.ViewHolder implements ApiRespo
                     presenter.onDeleteTrack(music, getAdapterPosition());
                 }
                 else if(music.getState() == BaseMusic.STATE_DEFAULT) {
+                    FlurryAgent.logEvent(itemView.getContext().getString(R.string.log_download_track));
                     presenter.onUploadTrack(music);
                 }
             }

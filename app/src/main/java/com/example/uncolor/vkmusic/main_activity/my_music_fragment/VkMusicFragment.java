@@ -30,6 +30,7 @@ import com.example.uncolor.vkmusic.music_adapter.MusicAdapter;
 import com.example.uncolor.vkmusic.music_adapter.OnLoadMoreListener;
 import com.example.uncolor.vkmusic.services.MusicService;
 import com.example.uncolor.vkmusic.services.download.DownloadService;
+import com.flurry.android.FlurryAgent;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
 
@@ -118,6 +119,7 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
         return new Runnable() {
             @Override
             public void run() {
+                FlurryAgent.logEvent(getContext().getString(R.string.log_search_after_auth));
                 if (searchVkMusicBody.getQ().length() == 0) {
                     switch (musicAdapter.getMode()) {
                         case MusicAdapter.MODE_CACHE:

@@ -9,9 +9,11 @@ import com.example.uncolor.vkmusic.Apis.request_bodies.GetMusicRequestBody;
 import com.example.uncolor.vkmusic.Apis.response_models.album_image_model.AlbumImageResponseModel;
 import com.example.uncolor.vkmusic.Apis.response_models.album_image_model.ImageInfo;
 import com.example.uncolor.vkmusic.Apis.response_models.MusicListResponseModel;
+import com.example.uncolor.vkmusic.R;
 import com.example.uncolor.vkmusic.models.BaseMusic;
 import com.example.uncolor.vkmusic.services.MusicService;
 import com.example.uncolor.vkmusic.utils.MessageReporter;
+import com.flurry.android.FlurryAgent;
 
 import java.io.IOException;
 import java.util.List;
@@ -88,6 +90,7 @@ public class MusicFragmentPresenter implements MusicFragmentContract.Presenter, 
         };
     }
     private void showMessageAboutAuth() {
+        FlurryAgent.logEvent(context.getString(R.string.log_download_before_auth));
         MessageReporter.showMessageAboutAuth(context);
     }
 

@@ -248,7 +248,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             musicIntent.putExtra(ARG_IS_SHUFFLING, isShuffling);
             if (!isPause) {
                 musicIntent.putExtra(ARG_PLAYBACK_POSITION, currentPlaybackPosition);
-                musicIntent.putExtra(ARG_MUSIC, playlist.get(playlistPosition));
+                musicIntent.putExtra(ARG_MUSIC, music);
             }
             sendBroadcast(musicIntent);
         } catch (Exception e) {
@@ -291,6 +291,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                     App.Log(nextMusic.getArtist());
                     App.Log(nextMusic.getTitle());
                     try {
+                        music = nextMusic;
                         playAudio(getMusicPath(nextMusic));
                         Intent musicIntent = new Intent(ACTION_NEXT);
                         musicIntent.putExtra(ARG_MUSIC, nextMusic);
@@ -308,6 +309,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 App.Log(nextMusic.getArtist());
                 App.Log(nextMusic.getTitle());
                 try {
+                    music = nextMusic;
                     playAudio(getMusicPath(nextMusic));
                     Intent musicIntent = new Intent(ACTION_NEXT);
                     musicIntent.putExtra(ARG_MUSIC, nextMusic);
@@ -324,6 +326,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                     App.Log(nextMusic.getArtist());
                     App.Log(nextMusic.getTitle());
                     try {
+                        music = nextMusic;
                         playAudio(getMusicPath(nextMusic));
                         Intent musicIntent = new Intent(ACTION_NEXT);
                         musicIntent.putExtra(ARG_MUSIC, nextMusic);
@@ -354,6 +357,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 playlistPosition--;
                 BaseMusic previousMusic = playlist.get(playlistPosition);
                 try {
+                    music = previousMusic;
                     playAudio(getMusicPath(previousMusic));
                     Intent musicIntent = new Intent(ACTION_PREVIOUS);
                     musicIntent.putExtra(ARG_MUSIC, previousMusic);

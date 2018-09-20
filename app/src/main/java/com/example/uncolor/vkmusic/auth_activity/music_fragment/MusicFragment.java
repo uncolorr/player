@@ -20,6 +20,7 @@ import com.example.uncolor.vkmusic.models.BaseMusic;
 import com.example.uncolor.vkmusic.models.Music;
 import com.example.uncolor.vkmusic.music_adapter.MusicAdapter;
 import com.example.uncolor.vkmusic.services.MusicService;
+import com.flurry.android.FlurryAgent;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.EFragment;
@@ -127,6 +128,7 @@ public class MusicFragment extends Fragment implements MusicFragmentContract.Vie
         return new Runnable() {
             @Override
             public void run() {
+                FlurryAgent.logEvent(getContext().getString(R.string.log_search_before_auth));
                 presenter.onLoadMusic(getMusicRequestBody, true);
             }
         };

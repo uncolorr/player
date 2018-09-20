@@ -10,6 +10,7 @@ import com.example.uncolor.vkmusic.R;
 import com.example.uncolor.vkmusic.application.App;
 import com.example.uncolor.vkmusic.auth_activity.AuthActivity;
 import com.example.uncolor.vkmusic.services.MusicService;
+import com.flurry.android.FlurryAgent;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
@@ -82,6 +83,7 @@ public class SettingsFragment extends Fragment implements SettingsFragmentContra
 
     @Override
     public void logOut() {
+        FlurryAgent.logEvent(getContext().getString(R.string.log_logout));
         App.logOut();
         getActivity().stopService(new Intent(getContext(), MusicService.class));
         getActivity().finishAffinity();

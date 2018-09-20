@@ -10,6 +10,7 @@ import com.example.uncolor.vkmusic.main_activity.MainActivity;
 import com.example.uncolor.vkmusic.services.MusicService;
 import com.example.uncolor.vkmusic.utils.LoadingDialog;
 import com.example.uncolor.vkmusic.utils.MessageReporter;
+import com.flurry.android.FlurryAgent;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
@@ -22,7 +23,6 @@ import org.androidannotations.annotations.ViewById;
 
 @EFragment(R.layout.fragment_auth)
 public class AuthFragment extends Fragment implements AuthFragmentContract.View{
-
 
     @ViewById
     EditText editTextLogin;
@@ -66,11 +66,13 @@ public class AuthFragment extends Fragment implements AuthFragmentContract.View{
 
     @Override
     public void showErrorMessage() {
+        FlurryAgent.logEvent(getContext().getString(R.string.log_auth_failed));
         MessageReporter.showMessage(getContext(), "Ошибка", "Ошибка при авторизации");
     }
 
     @Override
     public void login() {
+        FlurryAgent.logEvent(getContext().getString(R.string.log_auth_success));
         getActivity().stopService(new Intent(getContext(), MusicService.class));
         getActivity().finish();
         startActivity(MainActivity.getInstance(getContext()));
