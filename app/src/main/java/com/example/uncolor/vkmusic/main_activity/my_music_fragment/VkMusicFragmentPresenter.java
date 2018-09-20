@@ -23,6 +23,7 @@ import java.io.IOException;
 import java.util.List;
 import java.util.Objects;
 
+import io.realm.Case;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
@@ -72,9 +73,9 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
                 case MusicAdapter.MODE_CACHE:
                     RealmResults<VkMusic> results = realm.where(VkMusic.class)
                             .beginGroup()
-                            .contains("artist", searchVkMusicBody.getQ().toString())
+                            .contains("artist", searchVkMusicBody.getQ().toString(), Case.INSENSITIVE)
                             .or()
-                            .contains("title", searchVkMusicBody.getQ().toString())
+                            .contains("title", searchVkMusicBody.getQ().toString(), Case.INSENSITIVE)
                             .endGroup()
                             .findAll();
                     view.setMusicItems(results, true);
