@@ -19,8 +19,8 @@ public class SearchVkMusicBody {
         count = 100;
     }
 
-    public void incOffset(){
-        offset += count;
+    public void setOffset(int offset) {
+        this.offset = offset;
     }
 
     public void resetOffset(){
