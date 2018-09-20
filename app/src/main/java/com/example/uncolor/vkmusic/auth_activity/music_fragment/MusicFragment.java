@@ -153,6 +153,12 @@ public class MusicFragment extends Fragment implements MusicFragmentContract.Vie
     }
 
     @Override
+    public void onDestroy() {
+        super.onDestroy();
+        getContext().unregisterReceiver(musicReceiver);
+    }
+
+    @Override
     public void setMusicItems(List<Music> items, boolean isRefreshing) {
         if (isRefreshing) {
             musicAdapter.clear();
