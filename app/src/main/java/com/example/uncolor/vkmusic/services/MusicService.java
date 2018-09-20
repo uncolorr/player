@@ -326,6 +326,21 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                     App.Log(nextMusic.getArtist());
                     App.Log(nextMusic.getTitle());
                     try {
+                        MediaMetadataCompat metadata = metadataBuilder
+                                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, playlist.get(playlistPosition).getTitle())
+                                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, playlist.get(playlistPosition).getArtist())
+                                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, playlist.get(playlistPosition).getArtist())
+                                .build();
+                        mediaSession.setMetadata(metadata);
+
+
+                        mediaSession.setActive(true);
+
+                        // Сообщаем новое состояние
+                        mediaSession.setPlaybackState(
+                                stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
+                                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
+                        mediaSession.setMetadata(metadata);
                         music = nextMusic;
                         playAudio(getMusicPath(nextMusic));
                         Intent musicIntent = new Intent(ACTION_NEXT);
@@ -604,32 +619,46 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
         @Override
         public void onSkipToNext() {
+            App.Log("onSkipToNext");
             super.onSkipToNext();
             onActionNext(true);
             MediaMetadataCompat metadata = metadataBuilder
                     .putString(MediaMetadataCompat.METADATA_KEY_TITLE, playlist.get(playlistPosition).getTitle())
+                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, playlist.get(playlistPosition).getArtist())
                     .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, playlist.get(playlistPosition).getArtist())
                     .build();
             mediaSession.setMetadata(metadata);
+
+
             mediaSession.setActive(true);
+
+            // Сообщаем новое состояние
             mediaSession.setPlaybackState(
                     stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
                             PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
+            mediaSession.setMetadata(metadata);
         }
 
         @Override
         public void onSkipToPrevious() {
+            App.Log("onSkipToPrevious");
             super.onSkipToPrevious();
             onActionPrevious();
             MediaMetadataCompat metadata = metadataBuilder
                     .putString(MediaMetadataCompat.METADATA_KEY_TITLE, playlist.get(playlistPosition).getTitle())
+                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, playlist.get(playlistPosition).getArtist())
                     .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, playlist.get(playlistPosition).getArtist())
                     .build();
             mediaSession.setMetadata(metadata);
+
+
             mediaSession.setActive(true);
+
+            // Сообщаем новое состояние
             mediaSession.setPlaybackState(
                     stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
                             PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
+            mediaSession.setMetadata(metadata);
         }
     };
 }
