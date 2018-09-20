@@ -1,6 +1,7 @@
 package com.example.uncolor.vkmusic.Apis;
 
 
+import com.example.uncolor.vkmusic.Apis.response_models.UserInfoResponseModel;
 import com.example.uncolor.vkmusic.Apis.response_models.album_image_model.AlbumImageResponseModel;
 import com.example.uncolor.vkmusic.Apis.response_models.AuthResponseModel;
 import com.example.uncolor.vkmusic.Apis.response_models.MusicListResponseModel;
@@ -67,6 +68,13 @@ public interface ApiSource {
     @GET("https://ws.audioscrobbler.com/2.0/?format=json&api_key=859dd05988e7df407c03d6cb74e41477&method=track.getInfo")
     Call<AlbumImageResponseModel> getAlbumImage(@Query("artist") String artist,
                                                 @Query("track") String track);
+
+
+    @Headers("User-Agent: KateMobileAndroid/48.2 lite-433 (Android 8.1.0; SDK 27; arm64-v8a; Google Pixel 2 XL; en)")
+    @GET("https://api.vk.com/method/users.get")
+    Call<UserInfoResponseModel> getUserInfo(@Query("access_token") String access_token,
+                                        @Query("fields") String fields,
+                                        @Query("v") String v);
 
 
 }
