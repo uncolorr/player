@@ -46,12 +46,14 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
     @Override
     public void onFailure(int code, String message) {
         view.hideProgress();
+        view.removeLoadMoreProgress();
     }
 
     @Override
     public void onLoadMusic(GetVkMusicBody getVkMusicBody, boolean isRefreshing) {
         if (App.isAuth()) {
             view.showProgress();
+            view.addLoadMoreProgress();
             Api.getSource().getVkMusic(App.getToken(),
                     getVkMusicBody.getV(),
                     getVkMusicBody.getOffset(),
@@ -62,7 +64,8 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
     }
 
     @Override
-    public void onSearchMusic(SearchVkMusicBody searchVkMusicBody, int mode, boolean withCaptcha) {
+    public void onSearchMusic(SearchVkMusicBody searchVkMusicBody, int mode, boolean withCaptcha, boolean isRefreshing) {
+        App.Log("Search offset: " + searchVkMusicBody.getOffset());
         if (App.isAuth()) {
             view.showProgress();
             switch (mode){
@@ -78,6 +81,7 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
                     view.hideProgress();
                     break;
                 case MusicAdapter.MODE_ALL_MUSIC:
+                    view.addLoadMoreProgress();
                     if (withCaptcha) {
                         Api.getSource().searchVkMusicWithCaptcha(
                                 App.getToken(),
@@ -87,7 +91,7 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
                                 searchVkMusicBody.getCount(),
                                 searchVkMusicBody.getCaptchaSid(),
                                 searchVkMusicBody.getCaptchaKey())
-                                .enqueue(ApiResponse.getCallback(getSearchMusicCallback(),
+                                .enqueue(ApiResponse.getCallback(getSearchMusicCallback(isRefreshing),
                                         this));
                     } else {
                         Api.getSource().searchVkMusic(
@@ -96,7 +100,7 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
                                 searchVkMusicBody.getV(),
                                 searchVkMusicBody.getOffset(),
                                 searchVkMusicBody.getCount())
-                                .enqueue(ApiResponse.getCallback(getSearchMusicCallback(),
+                                .enqueue(ApiResponse.getCallback(getSearchMusicCallback(isRefreshing),
                                         this));
                     }
                     break;
@@ -130,17 +134,18 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
         };
     }
 
-    private ApiResponse.ApiResponseListener<VKMusicResponseModel> getSearchMusicCallback() {
+    private ApiResponse.ApiResponseListener<VKMusicResponseModel> getSearchMusicCallback(final boolean isRefreshing) {
         return new ApiResponse.ApiResponseListener<VKMusicResponseModel>() {
             @Override
             public void onResponse(VKMusicResponseModel result) throws IOException {
                 if (result.getResponse() != null) {
                     App.Log("search not null");
-                    view.setMusicItems(result.getResponse().getItems(), true);
+                    view.setMusicItems(result.getResponse().getItems(), isRefreshing);
                 } else if (result.getError() != null) {
-                    view.showCaptchaDialog(result.getError());
+                    view.showCaptchaDialog(result.getError(), isRefreshing);
                 }
                 view.hideProgress();
+                view.removeLoadMoreProgress();
             }
         };
     }
@@ -150,6 +155,7 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
             @Override
             public void onResponse(VKMusicResponseModel result) throws IOException {
                 view.hideProgress();
+                view.removeLoadMoreProgress();
                 view.setMusicItems(result.getResponse().getItems(), isRefreshing);
             }
         };

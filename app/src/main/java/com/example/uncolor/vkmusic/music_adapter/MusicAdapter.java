@@ -1,13 +1,13 @@
 package com.example.uncolor.vkmusic.music_adapter;
 
 import android.support.annotation.NonNull;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
 import com.example.uncolor.vkmusic.R;
-import com.example.uncolor.vkmusic.application.App;
 import com.example.uncolor.vkmusic.auth_activity.music_fragment.BaseMusicFragmentPresenter;
 import com.example.uncolor.vkmusic.models.BaseMusic;
 import com.example.uncolor.vkmusic.models.VkMusic;
@@ -30,11 +30,16 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
     public static final int MODE_CACHE = 1;
     public static final int MODE_ALL_MUSIC = 2;
 
+    private static final int ITEM_TYPE_MUSIC = 0;
+    private static final int ITEM_TYPE_LOADING = 1;
+
     private List<T> items = new ArrayList<>();
     private BaseMusicFragmentPresenter presenter;
     private BaseMusic currentMusic;
     private Realm realm;
     private int mode;
+    private boolean loading;
+    private OnLoadMoreListener onLoadMoreListener;
 
     public MusicAdapter(BaseMusicFragmentPresenter presenter) {
         this.presenter = presenter;
@@ -42,7 +47,60 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
         this.mode = MODE_ALL_MUSIC;
     }
 
+    @NonNull
+    @Override
+    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+        int layoutId;
+        if(viewType == ITEM_TYPE_LOADING){
+            layoutId = R.layout.loading_item;
+            View view = LayoutInflater
+                    .from(parent.getContext())
+                    .inflate(layoutId, parent, false);
+            return new LoadingViewHolder(view);
+        }
+        else {
+            layoutId = R.layout.music_item;
+            View view = LayoutInflater
+                    .from(parent.getContext())
+                    .inflate(layoutId, parent, false);
+            return new MusicViewHolder(view, presenter);
+        }
+    }
+
+
+    @Override
+    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
+        if (holder instanceof MusicViewHolder) {
+            MusicViewHolder musicViewHolder = (MusicViewHolder) holder;
+            musicViewHolder.bind(items.get(position), currentMusic);
+        }
+    }
+
+    @Override
+    public int getItemViewType(int position) {
+        if(items.get(position) == null){
+            return ITEM_TYPE_LOADING;
+        }
+        return ITEM_TYPE_MUSIC;
+    }
+
+    @Override
+    public int getItemCount() {
+        return items.size();
+    }
+
+    public int getMusicItemsCount(){
+        int counter = 0;
+        for (int i = 0; i < items.size(); i++) {
+            if(items.get(i) != null){
+                counter++;
+            }
+        }
+        return counter;
+    }
+
     public void add(List<T> musics) {
+        removeLoadingItem();
         this.items.addAll(musics);
         checkCache(musics);
         if(mode == MODE_CACHE){
@@ -54,6 +112,22 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
     public void clear() {
         this.items.clear();
         notifyDataSetChanged();
+    }
+
+    public void addLoadingItem(){
+        if(!items.isEmpty()) {
+            items.add(null);
+            notifyItemInserted(items.size() - 1);
+        }
+    }
+
+    public void removeLoadingItem(){
+        if(!items.isEmpty()){
+            if(items.get(items.size() - 1) == null){
+                items.remove(items.size() - 1);
+                notifyItemRemoved(items.size() - 1);
+            }
+        }
     }
 
     public void changeCurrentMusic(BaseMusic music) {
@@ -71,8 +145,10 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
     }
 
     public void setAlbumImageUrl(String url, int position){
-        items.get(position).setAlbumImageUrl(url);
-        notifyItemChanged(position);
+        if(mode == MODE_ALL_MUSIC && !items.isEmpty()) {
+            items.get(position).setAlbumImageUrl(url);
+            notifyItemChanged(position);
+        }
     }
 
     public void completeDownloadMusic(BaseMusic music) {
@@ -89,6 +165,18 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
                 notifyItemChanged(i);
             }
         }
+    }
+
+    public void checkCache(){
+        if(mode == MODE_ALL_MUSIC){
+            for (int i = 0; i < items.size(); i++) {
+                items.get(i).setState(BaseMusic.STATE_DEFAULT);
+            }
+        }
+        else if(mode == MODE_CACHE){
+            items.clear();
+        }
+        notifyDataSetChanged();
     }
 
     private void checkCache(List<T> musics) {
@@ -125,31 +213,16 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
         return file.exists();
     }
 
-    @NonNull
-    @Override
-    public RecyclerView.ViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
-        View view = LayoutInflater
-                .from(parent.getContext())
-                .inflate(R.layout.music_item, parent, false);
-        return new MusicViewHolder(view, presenter);
-    }
 
-
-    @Override
-    public void onBindViewHolder(@NonNull RecyclerView.ViewHolder holder, int position) {
-        if (holder instanceof MusicViewHolder) {
-            MusicViewHolder musicViewHolder = (MusicViewHolder) holder;
-            musicViewHolder.bind(items.get(position), currentMusic);
-        }
-    }
-
-    @Override
-    public int getItemCount() {
-        return items.size();
-    }
 
     public List<T> getItems() {
-        return items;
+        List<T> musicItems = new ArrayList<>();
+        for (int i = 0; i < items.size(); i++) {
+            if(items.get(i) != null){
+                musicItems.add(items.get(i));
+            }
+        }
+        return musicItems;
     }
 
     public void deleteTrack(BaseMusic music, int position) {
@@ -190,4 +263,37 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
         return this.mode;
     }
 
+    public void setLoaded() {
+        loading = false;
+    }
+
+    public void setOnLoadMoreListener(OnLoadMoreListener listener){
+        this.onLoadMoreListener = listener;
+    }
+
+    public RecyclerView.OnScrollListener getScrollListener(){
+        return new RecyclerView.OnScrollListener() {
+            @Override
+            public void onScrolled(RecyclerView recyclerView, int dx, int dy) {
+                super.onScrolled(recyclerView, dx, dy);
+                if(mode == MODE_ALL_MUSIC) {
+                    int visibleThreshold = 1;
+                    int lastVisibleItem, totalItemCount;
+                    LinearLayoutManager linearLayoutManager =
+                            (LinearLayoutManager) recyclerView.getLayoutManager();
+
+                    if (dy > 0) {
+                        totalItemCount = linearLayoutManager.getItemCount();
+                        lastVisibleItem = linearLayoutManager.findLastVisibleItemPosition();
+                        if (!loading && totalItemCount <= (lastVisibleItem + visibleThreshold)) {
+                            if (onLoadMoreListener != null) {
+                                onLoadMoreListener.onLoadMore();
+                            }
+                            loading = true;
+                        }
+                    }
+                }
+            }
+        };
+    }
 }

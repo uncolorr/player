@@ -22,11 +22,16 @@ import com.example.uncolor.vkmusic.CaptchaDialog;
 import com.example.uncolor.vkmusic.IntentFilterManager;
 import com.example.uncolor.vkmusic.R;
 import com.example.uncolor.vkmusic.application.App;
+import com.example.uncolor.vkmusic.main_activity.settings_fragment.SettingsFragment;
+import com.example.uncolor.vkmusic.main_activity.settings_fragment.SettingsFragmentPresenter;
 import com.example.uncolor.vkmusic.models.BaseMusic;
 import com.example.uncolor.vkmusic.models.VkMusic;
 import com.example.uncolor.vkmusic.music_adapter.MusicAdapter;
+import com.example.uncolor.vkmusic.music_adapter.OnLoadMoreListener;
 import com.example.uncolor.vkmusic.services.MusicService;
 import com.example.uncolor.vkmusic.services.download.DownloadService;
+import com.google.android.gms.ads.AdRequest;
+import com.google.android.gms.ads.AdView;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
@@ -48,6 +53,9 @@ import io.realm.RealmResults;
 
 @EFragment(R.layout.fragment_my_music)
 public class VkMusicFragment extends Fragment implements VkMusicFragmentContract.View {
+
+    @ViewById
+    AdView adView;
 
     @ViewById
     RecyclerView recyclerViewMusic;
@@ -82,46 +90,50 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
 
     @AfterViews
     void init() {
+        AdRequest adRequest = new AdRequest.Builder().build();
+        adView.loadAd(adRequest);
         realm = Realm.getDefaultInstance();
         radioButtonAllMusic.setChecked(true);
         getVkMusicBody = new GetVkMusicBody();
         searchVkMusicBody = new SearchVkMusicBody();
         presenter = new VkMusicFragmentPresenter(getContext(), this);
         musicAdapter = new MusicAdapter<>(presenter);
+        musicAdapter.setOnLoadMoreListener(getOnLoadMoreListener());
         recyclerViewMusic.setAdapter(musicAdapter);
         recyclerViewMusic.setLayoutManager(
                 new LinearLayoutManager(getContext(),
                         LinearLayoutManager.VERTICAL,
                         false));
-        presenter.onLoadMusic(getVkMusicBody, true);
+        recyclerViewMusic.addOnScrollListener(musicAdapter.getScrollListener());
         musicReceiver = getMusicReceiver();
         if (getContext() != null) {
             getContext().registerReceiver(musicReceiver, IntentFilterManager.getMusicIntentFilter());
         }
         editTextSearch.addTextChangedListener(getTempTextWatcher());
         searchRunnable = getSearchRunnable();
+        presenter.onLoadMusic(getVkMusicBody, true);
     }
 
     private Runnable getSearchRunnable() {
         return new Runnable() {
             @Override
             public void run() {
-                if(searchVkMusicBody.getQ().length() == 0){
-                    switch (musicAdapter.getMode()){
+                if (searchVkMusicBody.getQ().length() == 0) {
+                    switch (musicAdapter.getMode()) {
                         case MusicAdapter.MODE_CACHE:
+                            searchVkMusicBody.resetOffset();
                             presenter.onSearchMusic(searchVkMusicBody,
-                                    musicAdapter.getMode(),
-                                    false);
+                                    musicAdapter.getMode(), false, true);
                             break;
                         case MusicAdapter.MODE_ALL_MUSIC:
+                            getVkMusicBody = new GetVkMusicBody();
                             presenter.onLoadMusic(getVkMusicBody, true);
                             break;
                     }
-                }
-                else {
+                } else {
+                    searchVkMusicBody.resetOffset();
                     presenter.onSearchMusic(searchVkMusicBody,
-                            musicAdapter.getMode(),
-                            false);
+                            musicAdapter.getMode(), false, true);
                 }
             }
         };
@@ -150,12 +162,11 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
                         new TimerTask() {
                             @Override
                             public void run() {
-                                if(getActivity() != null){
+                                if (getActivity() != null) {
                                     getActivity().runOnUiThread(searchRunnable);
                                 }
                             }
-                        }, DELAY
-                );
+                        }, DELAY);
             }
         };
 
@@ -164,21 +175,32 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
 
     @Click(R.id.radioButtonAllMusic)
     void onAllMusicTabClick() {
-        musicAdapter.setMode(MusicAdapter.MODE_ALL_MUSIC);
-        musicAdapter.clear();
-        presenter.onLoadMusic(getVkMusicBody, true);
+        if (musicAdapter.getMode() != MusicAdapter.MODE_ALL_MUSIC) {
+            editTextSearch.getText().clear();
+            musicAdapter.setMode(MusicAdapter.MODE_ALL_MUSIC);
+            musicAdapter.clear();
+            getVkMusicBody = new GetVkMusicBody();
+            presenter.onLoadMusic(getVkMusicBody, true);
+        }
+
+
     }
 
     @Click(R.id.radioButtonDownloadedMusic)
     void onDownloadedMusicTabClick() {
-        realm.beginTransaction();
-        RealmResults<VkMusic> results = realm.where(VkMusic.class).findAll();
-        musicAdapter.setMode(MusicAdapter.MODE_CACHE);
-        musicAdapter.clear();
-        musicAdapter.add(results);
-        if (realm.isInTransaction()) {
-            realm.commitTransaction();
+        if (musicAdapter.getMode() != MusicAdapter.MODE_CACHE) {
+            editTextSearch.getText().clear();
+            realm.beginTransaction();
+            RealmResults<VkMusic> results = realm.where(VkMusic.class).findAll();
+            musicAdapter.setMode(MusicAdapter.MODE_CACHE);
+            musicAdapter.clear();
+            musicAdapter.add(results);
+            if (realm.isInTransaction()) {
+                realm.commitTransaction();
+            }
         }
+
+
     }
 
     private BroadcastReceiver getMusicReceiver() {
@@ -195,6 +217,8 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
                     musicAdapter.completeDownloadMusic(music);
                 } else if (Objects.equals(action, MusicService.ACTION_CLOSE)) {
                     musicAdapter.unselectCurrentTrack();
+                } else if (Objects.equals(action, SettingsFragment.ACTION_CLEAR_CACHE)) {
+                    musicAdapter.checkCache();
                 } else {
                     BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
                     if (music == null) {
@@ -208,7 +232,9 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
 
     @Override
     public void showProgress() {
-        progressBar.setVisibility(View.VISIBLE);
+        if (musicAdapter.getMusicItemsCount() == 0) {
+            progressBar.setVisibility(View.VISIBLE);
+        }
     }
 
     @Override
@@ -217,11 +243,22 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
     }
 
     @Override
+    public void addLoadMoreProgress() {
+        musicAdapter.addLoadingItem();
+    }
+
+    @Override
+    public void removeLoadMoreProgress() {
+        musicAdapter.removeLoadingItem();
+    }
+
+    @Override
     public void setMusicItems(List<VkMusic> items, boolean isRefreshing) {
         if (isRefreshing) {
             musicAdapter.clear();
         }
         musicAdapter.add(items);
+        musicAdapter.setLoaded();
     }
 
     @Override
@@ -243,11 +280,10 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
     }
 
     @Override
-    public void showCaptchaDialog(CaptchaErrorResponse captchaErrorResponse) {
+    public void showCaptchaDialog(CaptchaErrorResponse captchaErrorResponse, boolean isRefreshing) {
         captchaDialog = new CaptchaDialog(getContext(), captchaErrorResponse);
-        captchaDialog.setOnSendClickListener(getOnSendCaptchaClickListener(captchaErrorResponse));
+        captchaDialog.setOnSendClickListener(getOnSendCaptchaClickListener(captchaErrorResponse, isRefreshing));
         captchaDialog.show();
-
     }
 
     @Override
@@ -255,14 +291,33 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
         musicAdapter.setAlbumImageUrl(url, position);
     }
 
-    private View.OnClickListener getOnSendCaptchaClickListener(final CaptchaErrorResponse captchaErrorResponse) {
+    private OnLoadMoreListener getOnLoadMoreListener() {
+        return new OnLoadMoreListener() {
+            @Override
+            public void onLoadMore() {
+                App.Log("onLoadMore");
+                if (editTextSearch.getText().toString().isEmpty()) {
+                    getVkMusicBody.setOffset(musicAdapter.getMusicItemsCount());
+                    presenter.onLoadMusic(getVkMusicBody, false);
+                } else {
+                    searchVkMusicBody.setOffset(musicAdapter.getMusicItemsCount());
+                    presenter.onSearchMusic(searchVkMusicBody, musicAdapter.getMode(),
+                            false, false);
+                }
+            }
+        };
+    }
+
+    private View.OnClickListener getOnSendCaptchaClickListener(final CaptchaErrorResponse captchaErrorResponse,
+                                                               final boolean isRefreshing) {
         return new View.OnClickListener() {
             @Override
             public void onClick(View v) {
-                if(!captchaDialog.getCaptcha().isEmpty()){
+                if (!captchaDialog.getCaptcha().isEmpty()) {
                     searchVkMusicBody.setCaptchaKey(captchaDialog.getCaptcha());
                     searchVkMusicBody.setCaptchaSid(captchaErrorResponse.getCaptchaSID());
-                    presenter.onSearchMusic(searchVkMusicBody, musicAdapter.getMode(), true);
+                    presenter.onSearchMusic(searchVkMusicBody, musicAdapter.getMode(),
+                            true, isRefreshing);
                     captchaDialog.dismiss();
                 }
             }
