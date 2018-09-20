@@ -3,8 +3,11 @@ package com.example.uncolor.vkmusic.auth_activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.media.Image;
 import android.os.Handler;
+import android.os.PersistableBundle;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.app.AppCompatActivity;
@@ -21,6 +24,7 @@ import com.bumptech.glide.Glide;
 import com.example.uncolor.vkmusic.IntentFilterManager;
 import com.example.uncolor.vkmusic.R;
 import com.example.uncolor.vkmusic.application.App;
+import com.example.uncolor.vkmusic.main_activity.MainActivity;
 import com.example.uncolor.vkmusic.models.BaseMusic;
 import com.example.uncolor.vkmusic.services.MusicService;
 import com.example.uncolor.vkmusic.utils.DurationConverter;
@@ -76,6 +80,12 @@ public class AuthActivity extends AppCompatActivity implements
     ImageButton imageButtonPlayerPlay;
 
     @ViewById
+    ImageButton imageButtonShuffle;
+
+    @ViewById
+    ImageButton imageButtonRepeat;
+
+    @ViewById
     TextView textViewDuration;
 
     @ViewById
@@ -106,9 +116,15 @@ public class AuthActivity extends AppCompatActivity implements
         return new Intent(context, AuthActivity_.class);
     }
 
-
     @AfterViews
     void init(){
+        if(App.isAuth()){
+            startActivity(MainActivity.getInstance(this));
+            finish();
+            return;
+        }
+        imageButtonRepeat.setVisibility(View.INVISIBLE);
+        imageButtonShuffle.setVisibility(View.INVISIBLE);
         sheetBehavior = BottomSheetBehavior.from(bigPlayerPanel);
         hidePlayer();
         adapter = new AuthFragmentPagerAdapter(getSupportFragmentManager());
@@ -122,7 +138,6 @@ public class AuthActivity extends AppCompatActivity implements
         musicReceiver = getMusicReceiver();
         registerReceiver(musicReceiver, IntentFilterManager.getMusicIntentFilter());
     }
-
 
     @Click(R.id.playerPanel)
     void onPlayerPanelClick() {
@@ -336,6 +351,14 @@ public class AuthActivity extends AppCompatActivity implements
     protected void onStop() {
         super.onStop();
         handler.removeCallbacks(musicPositionRunnable);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        if(musicReceiver != null) {
+            unregisterReceiver(musicReceiver);
+        }
     }
 
     @Override

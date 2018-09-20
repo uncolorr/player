@@ -37,9 +37,6 @@ public class AuthFragment extends Fragment implements AuthFragmentContract.View{
     @AfterViews
     void init(){
         presenter = new AuthFragmentPresenter(getContext(), this);
-        if(presenter.isAuth()){
-            login();
-        }
         dialogProcessing = LoadingDialog.newInstanceWithoutCancelable(getContext(), LoadingDialog.LABEL_LOADING);
     }
 
