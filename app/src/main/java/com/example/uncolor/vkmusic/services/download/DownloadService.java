@@ -16,6 +16,7 @@ import android.support.annotation.Nullable;
 import android.support.v4.app.NotificationCompat;
 import android.support.v4.content.FileProvider;
 import android.support.v4.content.LocalBroadcastManager;
+import android.widget.Toast;
 
 
 import com.example.uncolor.vkmusic.Apis.Api;
@@ -71,6 +72,7 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
     protected void onHandleIntent(Intent intent) {
         App.Log("onHandleIntent service");
         if(music == null){
+            Toast.makeText(this, "Ошибка при скачивании трека", Toast.LENGTH_LONG).show();
             return;
         }
         String artist = "";
