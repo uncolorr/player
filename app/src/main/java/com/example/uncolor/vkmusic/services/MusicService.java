@@ -5,10 +5,12 @@ import android.app.Notification;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
 import android.graphics.BitmapFactory;
+import android.media.AudioManager;
 import android.media.MediaPlayer;
 import android.os.AsyncTask;
 import android.os.Bundle;
@@ -76,6 +78,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private boolean isPreparing = false;
     private MediaSessionCompat mediaSession;
     private MediaControllerCompat mediaController;
+    private AudioManager audioManager;
 
     private final PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
             .setActions(
@@ -87,11 +90,58 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                             | PlaybackStateCompat.ACTION_SKIP_TO_PREVIOUS);
 
 
+    private AudioManager.OnAudioFocusChangeListener focusChangeListener =
+            new AudioManager.OnAudioFocusChangeListener() {
+                public void onAudioFocusChange(int focusChange) {
+                    switch (focusChange) {
+                        case (AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK):
+                            // Lower the volume while ducking.
+                            App.Log("playlist position before stop: " + playlistPosition);
+                            mediaPlayer.setVolume(0.5f, 0.5f);
+                            break;
+                        case (AudioManager.AUDIOFOCUS_LOSS_TRANSIENT):
+                            //         pause();
+                            pauseOrResumeMedia();
+                            showNotification();
+                            mediaController.getTransportControls().pause();
+                            break;
+
+                        case (AudioManager.AUDIOFOCUS_LOSS):
+                            //     stop();
+                            App.Log("playlist position before stop loss: " + playlistPosition);
+                           // mediaPlayer.pause()
+                            if(mediaPlayer == null){
+                                return;
+                            }
+                            onActionPauseOrResume();
+                            showNotification();
+                            mediaController.getTransportControls().pause();
+                            //  ComponentName component = new ComponentName(AudioPlayerActivity.this,MediaControlReceiver.class);
+                            //     am.unregisterMediaButtonEventReceiver(component);
+                            break;
+
+                        case (AudioManager.AUDIOFOCUS_GAIN):
+                            // Return the volume to normal and resume if paused.
+                            App.Log("playlist position after stop gain: " + playlistPosition);
+                            mediaPlayer.setVolume(1f, 1f);
+                            //pauseOrResumeMedia();
+                           // onActionPauseOrResume();
+                          //  showNotification();
+                          //  mediaController.getTransportControls().play();
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            };
+
     @Override
     public void onCreate() {
         super.onCreate();
         App.Log("onCreate");
         initMediaPlayer();
+        audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
+
         mediaSession = new MediaSessionCompat(this, "PlayerService");
 
         // FLAG_HANDLES_MEDIA_BUTTONS - хотим получать события от аппаратных кнопок
@@ -105,7 +155,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         // Отдаем наши коллбэки
         mediaSession.setCallback(mediaSessionCallback);
 
-    //    Context appContext = getApplicationContext();
+        //    Context appContext = getApplicationContext();
 
         // Укажем activity, которую запустит система, если пользователь
         // заинтересуется подробностями данной сессии
@@ -129,59 +179,68 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 App.Log("Action: " + action);
                 Bundle extras = intent.getExtras();
 
-                if (Objects.equals(action, ACTION_PLAY)) {
-                    onActionPlay(extras);
-                }
-
-                if (Objects.equals(action, ACTION_PAUSE_OR_RESUME)) {
-                    onActionPauseOrResume();
-                }
-
-                if (Objects.equals(action, ACTION_NEXT)) {
-                    onActionNext(true);
-                }
-
-                if (Objects.equals(action, ACTION_PREVIOUS)) {
-                    onActionPrevious();
-                }
-
                 if (Objects.equals(action, ACTION_PLAYER_RESUME)) {
                     onActionPlayerStatus();
-                }
+                } else {
+                    int result = audioManager.requestAudioFocus(focusChangeListener,
+                            AudioManager.STREAM_MUSIC,
+                            AudioManager.AUDIOFOCUS_GAIN);
 
-                if (Objects.equals(action, ACTION_SEEK_BAR_MOVING)) {
-                    onActionSeekBarMoving(extras);
-                }
+                    if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
+// other app had stopped playing song now , so u can do u stuff now .
 
-                if (Objects.equals(action, ACTION_CLOSE)) {
-                    onActionClose();
-                }
 
-                if (Objects.equals(action, ACTION_CHANGE_LOOPING)) {
-                    onActionChangeLooping();
-                }
+                        if (Objects.equals(action, ACTION_PLAY)) {
+                            onActionPlay(extras);
+                        }
 
-                if (Objects.equals(action, ACTION_SHUFFLE_PLAYLIST)) {
-                    onActionShufflePlaylist();
+                        if (Objects.equals(action, ACTION_PAUSE_OR_RESUME)) {
+                            onActionPauseOrResume();
+                        }
+
+                        if (Objects.equals(action, ACTION_NEXT)) {
+                            onActionNext(true);
+                        }
+
+                        if (Objects.equals(action, ACTION_PREVIOUS)) {
+                            onActionPrevious();
+                        }
+
+                    }
+
+                    if (Objects.equals(action, ACTION_SEEK_BAR_MOVING)) {
+                        onActionSeekBarMoving(extras);
+                    }
+
+                    if (Objects.equals(action, ACTION_CLOSE)) {
+                        onActionClose();
+                    }
+
+                    if (Objects.equals(action, ACTION_CHANGE_LOOPING)) {
+                        onActionChangeLooping();
+                    }
+
+                    if (Objects.equals(action, ACTION_SHUFFLE_PLAYLIST)) {
+                        onActionShufflePlaylist();
+                    }
                 }
+                showNotification();
             }
-            showNotification();
         }
 
         return super.onStartCommand(intent, flags, startId);
     }
 
     private void onActionShufflePlaylist() {
-        if(!playlist.isEmpty()){
-            if(!isShuffling) {
+        if (!playlist.isEmpty()) {
+            if (!isShuffling) {
                 Collections.shuffle(playlist, new Random(SHUFFLE_SEED));
                 for (int i = 0; i < playlist.size(); i++) {
                     App.Log("id: " + playlist.get(i).getId());
                 }
                 App.Log(" ");
                 isShuffling = true;
-            }
-            else {
+            } else {
                 BaseMusic currentMusic = playlist.get(playlistPosition);
                 unshuffle(new Random(SHUFFLE_SEED));
                 for (int i = 0; i < playlist.size(); i++) {
@@ -189,7 +248,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 }
                 App.Log(" ");
                 for (int i = 0; i < playlist.size(); i++) {
-                    if(currentMusic.getId() == playlist.get(i).getId()){
+                    if (currentMusic.getId() == playlist.get(i).getId()) {
                         App.Log("position founded");
                         playlistPosition = i;
                         App.Log("playlist position: " + playlistPosition);
@@ -263,7 +322,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             music = extras.getParcelable(ARG_MUSIC);
             playlist = extras.getParcelableArrayList(ARG_PLAYLIST);
             playlistPosition = extras.getInt(ARG_POSITION);
-            if(isShuffling){
+            if (isShuffling) {
                 Collections.shuffle(playlist);
             }
             if (music != null) {
@@ -283,7 +342,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     private void onActionNext(boolean fromUser) {
         App.Log("onActionNext");
-        if(fromUser){
+        if (fromUser) {
             if (playlistPosition != playlist.size() - 1) {
                 playlistPosition++;
                 if (!playlist.isEmpty()) {
@@ -396,6 +455,9 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     private void onActionPauseOrResume() {
         App.Log("onActionPauseOrResume");
+        if(mediaPlayer == null){
+            return;
+        }
         if (isPreparing) {
             isPreparing = false;
             Intent musicIntent = new Intent(ACTION_PAUSE_OR_RESUME);
@@ -450,7 +512,9 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private void killMediaPlayer() {
         if (mediaPlayer != null) {
             try {
+                mediaPlayer.stop();
                 mediaPlayer.release();
+                mediaPlayer = null;
             } catch (Exception e) {
                 e.printStackTrace();
             }
