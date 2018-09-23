@@ -3,7 +3,7 @@ apply plugin: 'realm-android'
 android {
     compileSdkVersion 27
     defaultConfig {
-        applicationId "com.example.uncolor.vkmusic"
+        applicationId "com.comandante.uncolor.vkmusic"
         minSdkVersion 19
         targetSdkVersion 27
         versionCode 1

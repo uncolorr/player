@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.uncolor.vkmusic">
+    package="com.comandante.uncolor.vkmusic">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
@@ -8,23 +8,28 @@
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE"/>
 
     <application
-        android:name=".application.App"
+        android:name="com.comandante.uncolor.vkmusic.application.App"
         android:allowBackup="true"
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/MainActivityTheme">
+
+        <meta-data
+            android:name="com.google.android.gms.ads.APPLICATION_ID"
+            android:value="ca-app-pub-7685514492081797~6471620101"/>
+
+
         <activity
-            android:name=".main_activity.MainActivity_"
+            android:name="com.comandante.uncolor.vkmusic.main_activity.MainActivity_"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan">
-
         </activity>
 
         <provider
             android:name="android.support.v4.content.FileProvider"
-            android:authorities="com.example.uncolor.vkmusic.fileprovider"
+            android:authorities="com.comandante.uncolor.vkmusic.fileprovider"
             android:exported="false"
             android:grantUriPermissions="true">
             <meta-data
@@ -33,18 +38,18 @@
         </provider>
 
         <service
-            android:name=".services.MusicService"
+            android:name="com.comandante.uncolor.vkmusic.services.MusicService"
             android:exported="false">
         </service>
 
         <service
-            android:name=".services.download.DownloadService"
+            android:name="com.comandante.uncolor.vkmusic.services.download.DownloadService"
             android:exported="false">
 
         </service>
 
         <activity
-            android:name=".auth_activity.AuthActivity_"
+            android:name="com.comandante.uncolor.vkmusic.auth_activity.AuthActivity_"
             android:theme="@style/AuthActivityTheme"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize">
