@@ -126,9 +126,4 @@ public class App extends Application {
             throw new RuntimeException(e);
         }
     }
-
-
-    public static String getProviderAuthority() {
-        return "com.example.uncolor.vkmusic.fileprovider";
-    }
 }
