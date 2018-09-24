@@ -1,7 +1,7 @@
 package com.comandante.uncolor.vkmusic.Apis;
 
 
-import com.comandante.uncolor.vkmusic.Apis.response_models.UserInfoResponseModel;
+import com.comandante.uncolor.vkmusic.Apis.response_models.user_info_model.UserInfoResponseModel;
 import com.comandante.uncolor.vkmusic.Apis.response_models.album_image_model.AlbumImageResponseModel;
 import com.comandante.uncolor.vkmusic.Apis.response_models.AuthResponseModel;
 import com.comandante.uncolor.vkmusic.Apis.response_models.MusicListResponseModel;

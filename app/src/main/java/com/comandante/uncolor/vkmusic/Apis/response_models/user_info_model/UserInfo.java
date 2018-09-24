@@ -1,4 +1,4 @@
-package com.comandante.uncolor.vkmusic.Apis.response_models;
+package com.comandante.uncolor.vkmusic.Apis.response_models.user_info_model;
 
 import android.support.annotation.Nullable;
 
