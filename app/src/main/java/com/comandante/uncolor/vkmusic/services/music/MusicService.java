@@ -1,9 +1,8 @@
-package com.comandante.uncolor.vkmusic.services;
+package com.comandante.uncolor.vkmusic.services.music;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
 import android.app.NotificationManager;
-import android.app.PendingIntent;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
@@ -17,11 +16,8 @@ import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
-import android.widget.RemoteViews;
 
-import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
-import com.comandante.uncolor.vkmusic.main_activity.MainActivity_;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 
 import java.util.ArrayList;
@@ -53,8 +49,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
     private final MediaMetadataCompat.Builder metadataBuilder = new MediaMetadataCompat.Builder();
 
-    private static final int NOTIFICATION_ID = 564646;
-
     private static final int TIME_LIMIT_FOR_TURN_PREVIOUS = 5000;
 
     private static final int SHUFFLE_SEED = 42;
@@ -73,8 +67,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     private AudioManager audioManager;
 
     private final PlaybackStateCompat.Builder stateBuilder = new PlaybackStateCompat.Builder()
-            .setActions(
-                    PlaybackStateCompat.ACTION_PLAY
+            .setActions(PlaybackStateCompat.ACTION_PLAY
                             | PlaybackStateCompat.ACTION_STOP
                             | PlaybackStateCompat.ACTION_PAUSE
                             | PlaybackStateCompat.ACTION_PLAY_PAUSE
@@ -83,43 +76,29 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
 
 
     private AudioManager.OnAudioFocusChangeListener focusChangeListener =
-            new AudioManager.OnAudioFocusChangeListener() {
+              new AudioManager.OnAudioFocusChangeListener() {
                 public void onAudioFocusChange(int focusChange) {
                     switch (focusChange) {
                         case (AudioManager.AUDIOFOCUS_LOSS_TRANSIENT_CAN_DUCK):
-                            // Lower the volume while ducking.
-                            App.Log("playlist position before stop: " + playlistPosition);
                             mediaPlayer.setVolume(0.5f, 0.5f);
                             break;
                         case (AudioManager.AUDIOFOCUS_LOSS_TRANSIENT):
-                            //         pause();
                             pauseOrResumeMedia();
-                            showNotification();
+                            showMediaPlayerNotification();
                             mediaController.getTransportControls().pause();
                             break;
 
                         case (AudioManager.AUDIOFOCUS_LOSS):
-                            //     stop();
-                            App.Log("playlist position before stop loss: " + playlistPosition);
-                           // mediaPlayer.pause()
                             if(mediaPlayer == null){
                                 return;
                             }
                             onActionPauseOrResume();
-                            showNotification();
+                            showMediaPlayerNotification();
                             mediaController.getTransportControls().pause();
-                            //  ComponentName component = new ComponentName(AudioPlayerActivity.this,MediaControlReceiver.class);
-                            //     am.unregisterMediaButtonEventReceiver(component);
                             break;
 
                         case (AudioManager.AUDIOFOCUS_GAIN):
-                            // Return the volume to normal and resume if paused.
-                            App.Log("playlist position after stop gain: " + playlistPosition);
                             mediaPlayer.setVolume(1f, 1f);
-                            //pauseOrResumeMedia();
-                           // onActionPauseOrResume();
-                          //  showNotification();
-                          //  mediaController.getTransportControls().play();
                             break;
                         default:
                             break;
@@ -133,28 +112,12 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         App.Log("onCreate");
         initMediaPlayer();
         audioManager = (AudioManager) getSystemService(Context.AUDIO_SERVICE);
-
         mediaSession = new MediaSessionCompat(this, "PlayerService");
-
-        // FLAG_HANDLES_MEDIA_BUTTONS - хотим получать события от аппаратных кнопок
-        // (например, гарнитуры)
-        // FLAG_HANDLES_TRANSPORT_CONTROLS - хотим получать события от кнопок
-        // на окне блокировки
         mediaSession.setFlags(
                 MediaSessionCompat.FLAG_HANDLES_MEDIA_BUTTONS
                         | MediaSessionCompat.FLAG_HANDLES_TRANSPORT_CONTROLS);
 
-        // Отдаем наши коллбэки
         mediaSession.setCallback(mediaSessionCallback);
-
-        //    Context appContext = getApplicationContext();
-
-        // Укажем activity, которую запустит система, если пользователь
-        // заинтересуется подробностями данной сессии
-        /*Intent activityIntent = new Intent(appContext, MainActivity_.class);
-        mediaSession.setSessionActivity(
-                PendingIntent.getActivity(appContext, 0, activityIntent, 0));*/
-
         try {
             mediaController = new MediaControllerCompat(
                     this, mediaSession.getSessionToken());
@@ -179,9 +142,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                             AudioManager.AUDIOFOCUS_GAIN);
 
                     if (result == AudioManager.AUDIOFOCUS_REQUEST_GRANTED) {
-// other app had stopped playing song now , so u can do u stuff now .
-
-
                         if (Objects.equals(action, ACTION_PLAY)) {
                             onActionPlay(extras);
                         }
@@ -216,7 +176,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                         onActionShufflePlaylist();
                     }
                 }
-                showNotification();
+                showMediaPlayerNotification();
             }
         }
 
@@ -227,23 +187,13 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         if (!playlist.isEmpty()) {
             if (!isShuffling) {
                 Collections.shuffle(playlist, new Random(SHUFFLE_SEED));
-                for (int i = 0; i < playlist.size(); i++) {
-                    App.Log("id: " + playlist.get(i).getId());
-                }
-                App.Log(" ");
                 isShuffling = true;
             } else {
                 BaseMusic currentMusic = playlist.get(playlistPosition);
                 unshuffle(new Random(SHUFFLE_SEED));
                 for (int i = 0; i < playlist.size(); i++) {
-                    App.Log("id: " + playlist.get(i).getId());
-                }
-                App.Log(" ");
-                for (int i = 0; i < playlist.size(); i++) {
                     if (currentMusic.getId() == playlist.get(i).getId()) {
-                        App.Log("position founded");
                         playlistPosition = i;
-                        App.Log("playlist position: " + playlistPosition);
                     }
                 }
                 isShuffling = false;
@@ -266,14 +216,10 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
     private void onActionClose() {
-
-
-        App.Log("onActionClose");
         NotificationManager notificationManager
                 = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
         if (notificationManager != null) {
-            App.Log("send");
-            notificationManager.cancel(NOTIFICATION_ID);
+            notificationManager.cancel(MediaPlayerNotification.NOTIFICATION_ID);
             Intent musicIntent = new Intent(ACTION_CLOSE);
             sendBroadcast(musicIntent);
             stopSelf();
@@ -377,21 +323,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                     App.Log(nextMusic.getArtist());
                     App.Log(nextMusic.getTitle());
                     try {
-                        MediaMetadataCompat metadata = metadataBuilder
-                                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, playlist.get(playlistPosition).getTitle())
-                                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, playlist.get(playlistPosition).getArtist())
-                                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, playlist.get(playlistPosition).getArtist())
-                                .build();
-                        mediaSession.setMetadata(metadata);
-
-
-                        mediaSession.setActive(true);
-
-                        // Сообщаем новое состояние
-                        mediaSession.setPlaybackState(
-                                stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
-                                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
-                        mediaSession.setMetadata(metadata);
+                       updateMetadataInLockPlayerPanel();
                         music = nextMusic;
                         playAudio(getMusicPath(nextMusic));
                         Intent musicIntent = new Intent(ACTION_NEXT);
@@ -403,6 +335,19 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                 }
             }
         }
+    }
+
+    private void updateMetadataInLockPlayerPanel(){
+        MediaMetadataCompat metadata = metadataBuilder
+                .putString(MediaMetadataCompat.METADATA_KEY_TITLE, playlist.get(playlistPosition).getTitle())
+                .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, playlist.get(playlistPosition).getArtist())
+                .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, playlist.get(playlistPosition).getArtist())
+                .build();
+        mediaSession.setActive(true);
+        mediaSession.setPlaybackState(
+                stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
+                        PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
+        mediaSession.setMetadata(metadata);
     }
 
     private String getMusicPath(BaseMusic music) {
@@ -473,7 +418,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         mediaPlayer.setOnPreparedListener(this);
     }
 
-    @SuppressLint("StaticFieldLeak")
     private void playAudio(final String path) throws Exception {
         isPreparing = true;
         playbackPosition = 0;
@@ -543,80 +487,16 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
     }
 
 
-    private void showNotification() {
-        RemoteViews views = new RemoteViews(getPackageName(), R.layout.player_status_bar);
-        RemoteViews bigViews = new RemoteViews(getPackageName(), R.layout.player_status_bar);
-        if (App.isAuth()) {
-
-        }
-        Intent notificationIntent = new Intent(this, MainActivity_.class);
-        notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
-                | Intent.FLAG_ACTIVITY_CLEAR_TASK);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this,
-                0,
-                notificationIntent,
-                0);
-
-        Intent previousIntent = new Intent(this, MusicService.class);
-        previousIntent.setAction(ACTION_PREVIOUS);
-        PendingIntent pendingPreviousIntent = PendingIntent.getService(this,
-                0,
-                previousIntent,
-                0);
-
-        Intent playIntent = new Intent(this, MusicService.class);
-        playIntent.setAction(ACTION_PAUSE_OR_RESUME);
-        PendingIntent pendingPlayIntent = PendingIntent.getService(this,
-                0,
-                playIntent,
-                0);
-
-        Intent nextIntent = new Intent(this, MusicService.class);
-        nextIntent.setAction(ACTION_NEXT);
-        PendingIntent pendingNextIntent = PendingIntent.getService(this,
-                0, nextIntent,
-                0);
-
-        Intent closeIntent = new Intent(this, MusicService.class);
-        closeIntent.setAction(ACTION_CLOSE);
-        PendingIntent pendingCloseIntent = PendingIntent.getService(this,
-                0, closeIntent,
-                0);
-
-        views.setOnClickPendingIntent(R.id.status_bar_play, pendingPlayIntent);
-        bigViews.setOnClickPendingIntent(R.id.status_bar_play, pendingPlayIntent);
-        views.setOnClickPendingIntent(R.id.status_bar_next, pendingNextIntent);
-        bigViews.setOnClickPendingIntent(R.id.status_bar_next, pendingNextIntent);
-        views.setOnClickPendingIntent(R.id.status_bar_prev, pendingPreviousIntent);
-        bigViews.setOnClickPendingIntent(R.id.status_bar_prev, pendingPreviousIntent);
-        views.setOnClickPendingIntent(R.id.status_bar_close, pendingCloseIntent);
-        bigViews.setOnClickPendingIntent(R.id.status_bar_close, pendingCloseIntent);
-
-        if (playlist.isEmpty()) {
-            return;
-        }
-
-        BaseMusic currentMusic = playlist.get(playlistPosition);
-        int playButtonDrawable;
-        if (mediaPlayer.isPlaying()) {
-            playButtonDrawable = R.drawable.pause;
-        } else {
-            playButtonDrawable = R.drawable.play;
-        }
-
-        views.setImageViewResource(R.id.status_bar_play, playButtonDrawable);
-        bigViews.setImageViewResource(R.id.status_bar_play, playButtonDrawable);
-        views.setTextViewText(R.id.status_bar_track_name, currentMusic.getTitle());
-        bigViews.setTextViewText(R.id.status_bar_track_name, currentMusic.getTitle());
-        views.setTextViewText(R.id.status_bar_artist_name, currentMusic.getArtist());
-        bigViews.setTextViewText(R.id.status_bar_artist_name, currentMusic.getArtist());
-        status = new Notification.Builder(this).build();
-        status.contentView = views;
-        status.bigContentView = bigViews;
-        status.flags = Notification.FLAG_ONGOING_EVENT;
-        status.icon = R.drawable.ic_check_mark;
-        status.contentIntent = pendingIntent;
-        startForeground(NOTIFICATION_ID, status);
+    private void showMediaPlayerNotification() {
+       if(playlist.isEmpty()){
+           return;
+       }
+       MediaPlayerNotification mediaPlayerNotification =
+               new MediaPlayerNotification(
+                       this,
+                       playlist.get(playlistPosition),
+                       mediaPlayer.isPlaying());
+        startForeground(MediaPlayerNotification.NOTIFICATION_ID, mediaPlayerNotification.getNotification());
     }
 
     @Override
@@ -625,30 +505,17 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
         if (isPreparing) {
             isPreparing = false;
             mediaPlayer.start();
-            showNotification();
+            showMediaPlayerNotification();
             Intent musicIntent = new Intent(ACTION_BEGIN_PLAYING);
             sendBroadcast(musicIntent);
         }
     }
 
-    MediaSessionCompat.Callback mediaSessionCallback = new MediaSessionCompat.Callback() {
+    private MediaSessionCompat.Callback mediaSessionCallback = new MediaSessionCompat.Callback() {
         @Override
         public void onPlay() {
             App.Log("session on play");
-            MediaMetadataCompat metadata = metadataBuilder
-                    .putString(MediaMetadataCompat.METADATA_KEY_TITLE, playlist.get(playlistPosition).getTitle())
-                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, playlist.get(playlistPosition).getArtist())
-                    .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, playlist.get(playlistPosition).getArtist())
-                    .build();
-            mediaSession.setMetadata(metadata);
-
-
-            mediaSession.setActive(true);
-
-            // Сообщаем новое состояние
-            mediaSession.setPlaybackState(
-                    stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
-                            PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
+            updateMetadataInLockPlayerPanel();
             mediaPlayer.start();
 
         }
@@ -667,7 +534,6 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             App.Log("media session onStop");
             // Все, больше мы не "главный" плеер, уходим со сцены
             mediaSession.setActive(false);
-            // Сообщаем новое состояние
             mediaSession.setPlaybackState(
                     stateBuilder.setState(PlaybackStateCompat.STATE_STOPPED,
                             PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
@@ -678,21 +544,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             App.Log("onSkipToNext");
             super.onSkipToNext();
             onActionNext(true);
-            MediaMetadataCompat metadata = metadataBuilder
-                    .putString(MediaMetadataCompat.METADATA_KEY_TITLE, playlist.get(playlistPosition).getTitle())
-                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, playlist.get(playlistPosition).getArtist())
-                    .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, playlist.get(playlistPosition).getArtist())
-                    .build();
-            mediaSession.setMetadata(metadata);
-
-
-            mediaSession.setActive(true);
-
-            // Сообщаем новое состояние
-            mediaSession.setPlaybackState(
-                    stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
-                            PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
-            mediaSession.setMetadata(metadata);
+            updateMetadataInLockPlayerPanel();
         }
 
         @Override
@@ -700,21 +552,7 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
             App.Log("onSkipToPrevious");
             super.onSkipToPrevious();
             onActionPrevious();
-            MediaMetadataCompat metadata = metadataBuilder
-                    .putString(MediaMetadataCompat.METADATA_KEY_TITLE, playlist.get(playlistPosition).getTitle())
-                    .putString(MediaMetadataCompat.METADATA_KEY_ALBUM, playlist.get(playlistPosition).getArtist())
-                    .putString(MediaMetadataCompat.METADATA_KEY_ARTIST, playlist.get(playlistPosition).getArtist())
-                    .build();
-            mediaSession.setMetadata(metadata);
-
-
-            mediaSession.setActive(true);
-
-            // Сообщаем новое состояние
-            mediaSession.setPlaybackState(
-                    stateBuilder.setState(PlaybackStateCompat.STATE_PLAYING,
-                            PlaybackStateCompat.PLAYBACK_POSITION_UNKNOWN, 1).build());
-            mediaSession.setMetadata(metadata);
+           updateMetadataInLockPlayerPanel();
         }
     };
 }
