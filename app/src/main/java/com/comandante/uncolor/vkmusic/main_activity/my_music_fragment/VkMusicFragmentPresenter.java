@@ -16,7 +16,7 @@ import com.comandante.uncolor.vkmusic.application.AppPermissionManager;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.models.VkMusic;
 import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
-import com.comandante.uncolor.vkmusic.services.MusicService;
+import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.comandante.uncolor.vkmusic.services.download.DownloadService;
 
 import java.io.IOException;

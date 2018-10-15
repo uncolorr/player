@@ -2,9 +2,12 @@ package com.comandante.uncolor.vkmusic.application;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.Context;
 import android.content.SharedPreferences;
+import android.graphics.Color;
 import android.provider.Settings;
 import android.util.Base64;
 import android.util.Log;
@@ -33,8 +36,10 @@ public class App extends Application {
     public static final String APP_SETTINGS = "app_settings";
     public static final String APP_PREFERENCES_TOKEN = "app_token";
 
+
+
     protected static final String UTF8 = "utf-8";
-    private static final char[] SEKRIT = {'f', '4','y', 'f','a', 'f','b', 'g','f', 'h','f', 'o'} ;
+    private static final char[] SECRET = {'f', '4','y', 'f','a', 'f','b', 'g','f', 'h','f', 'o'} ;
 
     private static SharedPreferences settings;
 
@@ -56,13 +61,11 @@ public class App extends Application {
         Realm.init(this);
         RealmConfiguration config = new RealmConfiguration.Builder().name("music.realm").build();
         Realm.setDefaultConfiguration(config);
-
     }
 
     public static Context getContext() {
         return instance.getApplicationContext();
     }
-
 
     public static void Log(String message) {
         if (!message.isEmpty()) {
@@ -97,7 +100,7 @@ public class App extends Application {
         try {
             final byte[] bytes = value != null ? value.getBytes(UTF8) : new byte[0];
             SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBEWithMD5AndDES");
-            SecretKey key = keyFactory.generateSecret(new PBEKeySpec(SEKRIT));
+            SecretKey key = keyFactory.generateSecret(new PBEKeySpec(SECRET));
             Cipher pbeCipher = Cipher.getInstance("PBEWithMD5AndDES");
             pbeCipher.init(Cipher.ENCRYPT_MODE, key,
                     new PBEParameterSpec(Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
@@ -115,7 +118,7 @@ public class App extends Application {
         try {
             final byte[] bytes = value != null ? Base64.decode(value, Base64.DEFAULT) : new byte[0];
             SecretKeyFactory keyFactory = SecretKeyFactory.getInstance("PBEWithMD5AndDES");
-            SecretKey key = keyFactory.generateSecret(new PBEKeySpec(SEKRIT));
+            SecretKey key = keyFactory.generateSecret(new PBEKeySpec(SECRET));
             Cipher pbeCipher = Cipher.getInstance("PBEWithMD5AndDES");
             pbeCipher.init(Cipher.DECRYPT_MODE, key,
                     new PBEParameterSpec(Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)

@@ -18,8 +18,8 @@ import android.widget.Toast;
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.GetVkMusicBody;
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.SearchVkMusicBody;
 import com.comandante.uncolor.vkmusic.Apis.response_models.CaptchaErrorResponse;
-import com.comandante.uncolor.vkmusic.CaptchaDialog;
-import com.comandante.uncolor.vkmusic.IntentFilterManager;
+import com.comandante.uncolor.vkmusic.widgets.CaptchaDialog;
+import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.main_activity.settings_fragment.SettingsFragment;
@@ -27,7 +27,7 @@ import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.models.VkMusic;
 import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
 import com.comandante.uncolor.vkmusic.music_adapter.OnLoadMoreListener;
-import com.comandante.uncolor.vkmusic.services.MusicService;
+import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.comandante.uncolor.vkmusic.services.download.DownloadService;
 import com.flurry.android.FlurryAgent;
 import com.google.android.gms.ads.AdRequest;
@@ -216,6 +216,10 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
                 } else if (Objects.equals(action, DownloadService.ACTION_DOWNLOAD_COMPLETED)) {
                     BaseMusic music = intent.getParcelableExtra(DownloadService.ARG_MUSIC);
                     musicAdapter.completeDownloadMusic(music);
+                }else if (Objects.equals(action, DownloadService.ACTION_DOWNLOAD_FAILURE)) {
+                    BaseMusic music = intent.getParcelableExtra(DownloadService.ARG_MUSIC);
+                    musicAdapter.setDefaultMusicState(music);
+                    showErrorToast("Ошибка при скачивании трека");
                 } else if (Objects.equals(action, MusicService.ACTION_CLOSE)) {
                     musicAdapter.unselectCurrentTrack();
                 } else if (Objects.equals(action, SettingsFragment.ACTION_CLEAR_CACHE)) {
@@ -240,7 +244,9 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
 
     @Override
     public void hideProgress() {
-        progressBar.setVisibility(View.GONE);
+        if(progressBar != null) {
+            progressBar.setVisibility(View.GONE);
+        }
     }
 
     @Override

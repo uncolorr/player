@@ -1,4 +1,4 @@
-package com.comandante.uncolor.vkmusic;
+package com.comandante.uncolor.vkmusic.widgets;
 
 import android.app.AlertDialog;
 import android.content.Context;
@@ -10,6 +10,7 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.comandante.uncolor.vkmusic.Apis.response_models.CaptchaErrorResponse;
+import com.comandante.uncolor.vkmusic.R;
 
 /**
  * Created by Uncolor on 13.09.2018.

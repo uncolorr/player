@@ -1,9 +1,12 @@
 package com.comandante.uncolor.vkmusic.services.music;
 
 import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Build;
+import android.support.v4.app.NotificationCompat;
 import android.widget.RemoteViews;
 
 import com.comandante.uncolor.vkmusic.R;
@@ -17,6 +20,9 @@ import com.comandante.uncolor.vkmusic.models.BaseMusic;
 public class MediaPlayerNotification {
 
     public static final int NOTIFICATION_ID = 564646;
+
+    public static final String NOTIFICATION_CHANNEL_ID = "453524342";
+    public static final String NOTIFICATION_CHANNEL_NAME = "com.comandante.uncolor.vkmusic";
 
     private Context context;
 
@@ -47,7 +53,7 @@ public class MediaPlayerNotification {
         setMusicInfo();
     }
 
-    private void setPendingIntents(){
+    private void setPendingIntents() {
         views.setOnClickPendingIntent(R.id.status_bar_play, pendingIntentPlay);
         bigViews.setOnClickPendingIntent(R.id.status_bar_play, pendingIntentPlay);
         views.setOnClickPendingIntent(R.id.status_bar_next, pendingIntentNext);
@@ -58,7 +64,7 @@ public class MediaPlayerNotification {
         bigViews.setOnClickPendingIntent(R.id.status_bar_close, pendingIntentClose);
     }
 
-    private void setMusicInfo(){
+    private void setMusicInfo() {
         int playButtonDrawable;
         if (isPlaying) {
             playButtonDrawable = R.drawable.pause;
@@ -74,17 +80,18 @@ public class MediaPlayerNotification {
         bigViews.setTextViewText(R.id.status_bar_artist_name, currentMusic.getArtist());
     }
 
-    public Notification getNotification(){
-        Notification notification = new Notification.Builder(context).build();
-        notification.contentView = views;
-        notification.bigContentView = bigViews;
-        notification.flags = Notification.FLAG_ONGOING_EVENT;
-        notification.icon = R.drawable.ic_check_mark;
-        notification.contentIntent = pendingIntentContent;
+    public Notification getNotification() {
+        NotificationCompat.Builder notificationBuilder = new NotificationCompat.Builder(context, NOTIFICATION_CHANNEL_ID);
+        Notification notification = notificationBuilder.setOngoing(true)
+                .setSmallIcon(R.drawable.ic_check_mark)
+                .setCustomContentView(views)
+                .setCustomBigContentView(bigViews)
+                .setContentIntent(pendingIntentContent)
+                .build();
         return notification;
     }
 
-    private PendingIntent createPendingIntent(String action){
+    private PendingIntent createPendingIntent(String action) {
         Intent intent = new Intent(context, MusicService.class);
         intent.setAction(action);
         return PendingIntent.getService(context,
@@ -92,7 +99,7 @@ public class MediaPlayerNotification {
                 0);
     }
 
-    private PendingIntent createContentPendingIntent(){
+    private PendingIntent createContentPendingIntent() {
         Intent notificationIntent = new Intent(context, MainActivity_.class);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_CLEAR_TASK);

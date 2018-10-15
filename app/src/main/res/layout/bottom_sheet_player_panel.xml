@@ -25,7 +25,7 @@
         android:src="@drawable/down"
         android:layout_marginTop="8dp"/>
     
-    <com.example.uncolor.vkmusic.widgets.SquareImageView
+    <com.comandante.uncolor.vkmusic.widgets.SquareImageView
         android:id="@+id/imageViewMusicPlate"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -155,34 +155,27 @@
         android:gravity="center">
 
         <ImageButton
-            android:layout_width="32dp"
-            android:layout_height="32dp" />
-
-        <Space
-            android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1"/>
-
-        <ImageButton
-            android:id="@+id/imageButtonDownload"
-            android:layout_width="32dp"
+            android:id="@+id/imageButtonShuffle"
+            android:layout_width="40dp"
             android:layout_height="32dp"
-            android:scaleType="centerCrop"
-            android:padding="4dp"
-            android:background="@android:color/transparent"
-            android:src="@drawable/download" />
+            android:tint="@color/colorMain"
+            android:background="@android:color/white"
+            android:src="@drawable/ic_shuffle" />
 
         <Space
-            android:layout_width="match_parent"
+            android:layout_width="0dp"
             android:layout_height="0dp"
             android:layout_weight="1"/>
 
         <ImageButton
-            android:layout_width="32dp"
-            android:layout_height="32dp" />
+            android:id="@+id/imageButtonRepeat"
+            android:layout_width="40dp"
+            android:layout_height="32dp"
+            android:src="@drawable/ic_repeat"
+            android:tint="@color/colorMain"
+            android:background="@android:color/white"/>
+
 
     </LinearLayout>
-
-
 
 </LinearLayout>

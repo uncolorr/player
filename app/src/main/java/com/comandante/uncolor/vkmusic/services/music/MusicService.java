@@ -2,21 +2,26 @@ package com.comandante.uncolor.vkmusic.services.music;
 
 import android.annotation.SuppressLint;
 import android.app.Notification;
+import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.Service;
 import android.content.Context;
 import android.content.Intent;
+import android.graphics.Color;
 import android.media.AudioManager;
 import android.media.MediaPlayer;
+import android.os.Build;
 import android.os.Bundle;
 import android.os.IBinder;
 import android.os.RemoteException;
 import android.support.annotation.Nullable;
+import android.support.v4.app.NotificationCompat;
 import android.support.v4.media.MediaMetadataCompat;
 import android.support.v4.media.session.MediaControllerCompat;
 import android.support.v4.media.session.MediaSessionCompat;
 import android.support.v4.media.session.PlaybackStateCompat;
 
+import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 
@@ -496,7 +501,24 @@ public class MusicService extends Service implements MediaPlayer.OnCompletionLis
                        this,
                        playlist.get(playlistPosition),
                        mediaPlayer.isPlaying());
-        startForeground(MediaPlayerNotification.NOTIFICATION_ID, mediaPlayerNotification.getNotification());
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O)
+            startMyOwnForeground(mediaPlayerNotification.getNotification());
+        else {
+            startForeground(MediaPlayerNotification.NOTIFICATION_ID, mediaPlayerNotification.getNotification());
+        }
+    }
+
+    private void startMyOwnForeground(Notification notification){
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            NotificationChannel chan = new NotificationChannel(MediaPlayerNotification.NOTIFICATION_CHANNEL_ID,
+                    MediaPlayerNotification.NOTIFICATION_CHANNEL_NAME, NotificationManager.IMPORTANCE_LOW);
+            chan.setLightColor(Color.BLUE);
+            chan.setLockscreenVisibility(Notification.VISIBILITY_PRIVATE);
+            NotificationManager manager = (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+            assert manager != null;
+            manager.createNotificationChannel(chan);
+            startForeground(MediaPlayerNotification.NOTIFICATION_ID, notification);
+        }
     }
 
     @Override

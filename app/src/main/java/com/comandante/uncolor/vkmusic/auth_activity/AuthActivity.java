@@ -17,12 +17,12 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.comandante.uncolor.vkmusic.IntentFilterManager;
+import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.main_activity.MainActivity;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
-import com.comandante.uncolor.vkmusic.services.MusicService;
+import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.comandante.uncolor.vkmusic.utils.DurationConverter;
 import com.comandante.uncolor.vkmusic.widgets.SquareImageView;
 import com.comandante.uncolor.vkmusic.widgets.StaticViewPager;

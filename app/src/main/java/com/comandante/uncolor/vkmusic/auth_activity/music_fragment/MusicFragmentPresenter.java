@@ -11,7 +11,7 @@ import com.comandante.uncolor.vkmusic.Apis.response_models.album_image_model.Ima
 import com.comandante.uncolor.vkmusic.Apis.response_models.MusicListResponseModel;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
-import com.comandante.uncolor.vkmusic.services.MusicService;
+import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.comandante.uncolor.vkmusic.utils.MessageReporter;
 import com.flurry.android.FlurryAgent;
 

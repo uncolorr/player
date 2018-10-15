@@ -5,20 +5,20 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    tools:context="com.example.uncolor.vkmusic.auth_activity.AuthActivity">
+    tools:context="com.comandante.uncolor.vkmusic.auth_activity.AuthActivity">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:orientation="vertical">
 
-        <com.example.uncolor.vkmusic.widgets.StaticViewPager
+        <com.comandante.uncolor.vkmusic.widgets.StaticViewPager
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">
 
-        </com.example.uncolor.vkmusic.widgets.StaticViewPager>
+        </com.comandante.uncolor.vkmusic.widgets.StaticViewPager>
 
 
         <ProgressBar
@@ -44,7 +44,7 @@
             android:orientation="horizontal">
 
 
-            <com.example.uncolor.vkmusic.widgets.SquareImageView
+            <com.comandante.uncolor.vkmusic.widgets.SquareImageView
                 android:id="@+id/imageViewPanelAlbum"
                 android:layout_width="48dp"
                 android:layout_height="48dp"

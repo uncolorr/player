@@ -7,7 +7,7 @@ import android.widget.EditText;
 
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.main_activity.MainActivity;
-import com.comandante.uncolor.vkmusic.services.MusicService;
+import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.comandante.uncolor.vkmusic.utils.LoadingDialog;
 import com.comandante.uncolor.vkmusic.utils.MessageReporter;
 import com.flurry.android.FlurryAgent;

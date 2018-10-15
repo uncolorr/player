@@ -1,9 +1,9 @@
-package com.comandante.uncolor.vkmusic;
+package com.comandante.uncolor.vkmusic.utils;
 
 import android.content.IntentFilter;
 
 import com.comandante.uncolor.vkmusic.main_activity.settings_fragment.SettingsFragment;
-import com.comandante.uncolor.vkmusic.services.MusicService;
+import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.comandante.uncolor.vkmusic.services.download.DownloadService;
 
 /**

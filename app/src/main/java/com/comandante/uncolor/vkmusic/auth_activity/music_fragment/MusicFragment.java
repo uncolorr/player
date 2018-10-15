@@ -13,13 +13,13 @@ import android.widget.EditText;
 import android.widget.ProgressBar;
 
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.GetMusicRequestBody;
-import com.comandante.uncolor.vkmusic.IntentFilterManager;
+import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.models.Music;
 import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
-import com.comandante.uncolor.vkmusic.services.MusicService;
+import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.flurry.android.FlurryAgent;
 
 import org.androidannotations.annotations.AfterViews;

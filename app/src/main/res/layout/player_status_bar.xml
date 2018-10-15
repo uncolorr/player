@@ -49,6 +49,7 @@
                 android:layout_height="wrap_content"
                 android:layout_gravity="start"
                 android:ellipsize="marquee"
+                android:textColor="@android:color/black"
                 android:fadingEdge="horizontal"
                 android:singleLine="true"
                 tools:text="Artist name" />

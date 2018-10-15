@@ -64,6 +64,7 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
 
         if(music == null){
             App.Log("music null");
+            sendIntent(ACTION_DOWNLOAD_FAILURE);
             return;
         }
         String artist = "";

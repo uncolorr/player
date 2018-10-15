@@ -9,7 +9,7 @@ import com.bumptech.glide.Glide;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.auth_activity.AuthActivity;
-import com.comandante.uncolor.vkmusic.services.MusicService;
+import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.flurry.android.FlurryAgent;
 
 import org.androidannotations.annotations.AfterViews;

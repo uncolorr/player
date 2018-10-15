@@ -71,5 +71,9 @@
         <item name="android:background">@drawable/edit_text_captcha_drawable</item>
     </style>
 
+    <style name="BlueProgressBar" parent="ThemeOverlay.AppCompat.Light">
+        <item name="colorAccent">@color/colorMain</item>
+    </style>
+
 
 </resources>
