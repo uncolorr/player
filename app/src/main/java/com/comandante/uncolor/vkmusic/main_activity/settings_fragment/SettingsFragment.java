@@ -47,6 +47,13 @@ public class SettingsFragment extends Fragment implements SettingsFragmentContra
         presenter.showClearCacheDialog();
     }
 
+
+    @Click(R.id.buttonExit)
+    void onButtonExitClick(){
+        presenter.showExitDialog();
+
+    }
+
     @Click(R.id.buttonContactWithDevelopers)
     void onButtonContactWithDevelopersClick(){
 
@@ -59,12 +66,6 @@ public class SettingsFragment extends Fragment implements SettingsFragmentContra
 
     @Click(R.id.buttonPolitics)
     void onButtonPoliticsClick(){
-
-    }
-
-    @Click(R.id.buttonExit)
-    void onButtonExitClick(){
-        presenter.showExitDialog();
 
     }
 

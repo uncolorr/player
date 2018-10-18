@@ -15,7 +15,7 @@ import com.comandante.uncolor.vkmusic.main_activity.settings_fragment.SettingsFr
 
 public class MainPagerAdapter extends FragmentPagerAdapter {
 
-    private static int PAGES_COUNT = 3;
+    private static int PAGES_COUNT = 2;
 
     public MainPagerAdapter(FragmentManager fm) {
         super(fm);
@@ -27,8 +27,6 @@ public class MainPagerAdapter extends FragmentPagerAdapter {
             case 0:
                 return VkMusicFragment_.builder().build();
             case 1:
-                return PlaylistsFragment_.builder().build();
-            case 2:
                 return SettingsFragment_.builder().build();
         }
         return null;

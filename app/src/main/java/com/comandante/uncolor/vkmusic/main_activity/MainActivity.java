@@ -429,11 +429,8 @@ public class MainActivity extends AppCompatActivity implements
             case R.id.action_my_music:
                 viewPager.setCurrentItem(0, true);
                 break;
-            case R.id.action_playlists:
-                viewPager.setCurrentItem(1, true);
-                break;
             case R.id.action_settings:
-                viewPager.setCurrentItem(2, true);
+                viewPager.setCurrentItem(1, true);
                 break;
         }
         return true;
