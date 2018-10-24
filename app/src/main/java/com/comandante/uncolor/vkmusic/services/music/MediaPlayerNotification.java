@@ -10,6 +10,9 @@ import android.support.v4.app.NotificationCompat;
 import android.widget.RemoteViews;
 
 import com.comandante.uncolor.vkmusic.R;
+import com.comandante.uncolor.vkmusic.application.App;
+import com.comandante.uncolor.vkmusic.auth_activity.AuthActivity;
+import com.comandante.uncolor.vkmusic.auth_activity.AuthActivity_;
 import com.comandante.uncolor.vkmusic.main_activity.MainActivity_;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 
@@ -45,10 +48,10 @@ public class MediaPlayerNotification {
         views = new RemoteViews(context.getPackageName(), R.layout.player_status_bar);
         bigViews = new RemoteViews(context.getPackageName(), R.layout.player_status_bar);
         pendingIntentContent = createContentPendingIntent();
-        pendingIntentPlay = createPendingIntent(MusicService.ACTION_PAUSE_OR_RESUME);
-        pendingIntentPrevious = createPendingIntent(MusicService.ACTION_PREVIOUS);
-        pendingIntentNext = createPendingIntent(MusicService.ACTION_NEXT);
-        pendingIntentClose = createPendingIntent(MusicService.ACTION_CLOSE);
+        pendingIntentPlay = createPendingIntent(NewMusicService.ACTION_PAUSE_OR_RESUME);
+        pendingIntentPrevious = createPendingIntent(NewMusicService.ACTION_PREVIOUS);
+        pendingIntentNext = createPendingIntent(NewMusicService.ACTION_NEXT);
+        pendingIntentClose = createPendingIntent(NewMusicService.ACTION_CLOSE);
         setPendingIntents();
         setMusicInfo();
     }
@@ -92,7 +95,7 @@ public class MediaPlayerNotification {
     }
 
     private PendingIntent createPendingIntent(String action) {
-        Intent intent = new Intent(context, MusicService.class);
+        Intent intent = new Intent(context, NewMusicService.class);
         intent.setAction(action);
         return PendingIntent.getService(context,
                 0, intent,
@@ -100,7 +103,14 @@ public class MediaPlayerNotification {
     }
 
     private PendingIntent createContentPendingIntent() {
-        Intent notificationIntent = new Intent(context, MainActivity_.class);
+        Class clazz;
+        if(App.isAuth()){
+            clazz = MainActivity_.class;
+        }
+        else {
+            clazz = AuthActivity_.class;
+        }
+        Intent notificationIntent = new Intent(context, clazz);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK
                 | Intent.FLAG_ACTIVITY_CLEAR_TASK);
         return PendingIntent.getActivity(context,

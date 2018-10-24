@@ -1,10 +1,13 @@
 package com.comandante.uncolor.vkmusic.main_activity;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.graphics.PorterDuff;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
@@ -19,11 +22,12 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.comandante.uncolor.vkmusic.auth_activity.AuthActivity;
+import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
-import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.comandante.uncolor.vkmusic.utils.DurationConverter;
 import com.comandante.uncolor.vkmusic.widgets.SquareImageView;
 import com.comandante.uncolor.vkmusic.widgets.StaticViewPager;
@@ -103,13 +107,13 @@ public class MainActivity extends AppCompatActivity implements
 
     private Handler handler;
 
-    private int musicProgressPosition;
-
     private int musicDuration;
 
-    private boolean isLooping;
+    private ServiceConnection serviceConnection;
 
-    private boolean isShuffling;
+    private NewMusicService newMusicService;
+
+    private boolean isBounded;
 
     public static Intent getInstance(Context context) {
         return new Intent(context, MainActivity_.class);
@@ -129,6 +133,34 @@ public class MainActivity extends AppCompatActivity implements
         handler = new Handler();
         musicPositionRunnable = getMusicPositionRunnable();
         seekBar.setOnSeekBarChangeListener(this);
+        serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                App.Log("onServiceConnected");
+                newMusicService = ((NewMusicService.MusicBinder) service).getService();
+                bindPlayerState();
+                isBounded = true;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                App.Log("onServiceDisconnected");
+                isBounded = false;
+            }
+        };
+    }
+
+    private void bindPlayerState() {
+        if (newMusicService.isPlaying()) {
+            BaseMusic music = newMusicService.getCurrentMusic();
+            App.Log("player playing");
+            showPlayerPanel();
+            setPauseButtons();
+            setSongDescriptions(music);
+            changeRepeatButtonState(newMusicService.isLooping());
+            changeShuffleButtonState(newMusicService.isShuffling());
+            handler.post(musicPositionRunnable);
+        }
     }
 
     @Click(R.id.playerPanel)
@@ -142,46 +174,67 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     @Click(R.id.imageButtonRepeat)
-    void onRepeatButtonClick(){
-        isLooping = !isLooping;
-        Intent intent = new Intent(this, MusicService.class);
-        intent.setAction(MusicService.ACTION_CHANGE_LOOPING);
-        intent.putExtra(MusicService.ARG_IS_LOOPING, isLooping);
-        startService(intent);
-        changeRepeatButtonState();
+    void onRepeatButtonClick() {
+        boolean isLooping = newMusicService.isLooping();
+        newMusicService.setLooping(!isLooping);
+        changeRepeatButtonState(!isLooping);
     }
 
     @Click(R.id.imageButtonShuffle)
-    void onShuffleButtonClick(){
-        isShuffling = !isShuffling;
-        Intent intent = new Intent(this, MusicService.class);
-        intent.setAction(MusicService.ACTION_SHUFFLE_PLAYLIST);
-        intent.putExtra(MusicService.ARG_IS_SHUFFLING, isShuffling);
-        startService(intent);
-        changeShuffleButtonState();
+    void onShuffleButtonClick() {
+        boolean isShuffling = newMusicService.isShuffling();
+        if (isShuffling) {
+            newMusicService.unshuffle();
+        } else {
+            newMusicService.shuffle();
+        }
+        changeShuffleButtonState(!isShuffling);
     }
-
 
 
     @Click({R.id.imageButtonPanelPlay, R.id.imageButtonPlayerPlay})
     void onPlayButtonClick() {
-        Intent intent = new Intent(this, MusicService.class);
-        intent.setAction(MusicService.ACTION_PAUSE_OR_RESUME);
-        startService(intent);
+        if (isBounded) {
+            if (newMusicService.isPlaying()) {
+                newMusicService.pause();
+                handler.removeCallbacks(musicPositionRunnable);
+                setPlayButtons();
+            } else {
+                newMusicService.resume();
+                handler.post(musicPositionRunnable);
+                setPauseButtons();
+            }
+        }
     }
 
     @Click({R.id.imageButtonPanelNext, R.id.imageButtonPlayerNext})
     void onNextButtonClick() {
-        Intent intent = new Intent(this, MusicService.class);
-        intent.setAction(MusicService.ACTION_NEXT);
-        startService(intent);
+        if (isBounded) {
+            BaseMusic music = newMusicService.next(true);
+            if(music != null) {
+                setSongDescriptions(music);
+                setPauseButtons();
+                setPlaybackPosition(0);
+                handler.removeCallbacks(musicPositionRunnable);
+                Intent musicIntent = new Intent(NewMusicService.ACTION_NEXT);
+                musicIntent.putExtra(NewMusicService.ARG_MUSIC, music);
+                sendBroadcast(musicIntent);
+            }
+        }
     }
 
     @Click(R.id.imageButtonPlayerPrevious)
     void onPreviousButtonClick() {
-        Intent intent = new Intent(this, MusicService.class);
-        intent.setAction(MusicService.ACTION_PREVIOUS);
-        startService(intent);
+        if (isBounded) {
+            BaseMusic music = newMusicService.previous();
+            setSongDescriptions(music);
+            setPauseButtons();
+            setPlaybackPosition(0);
+            handler.removeCallbacks(musicPositionRunnable);
+            Intent musicIntent = new Intent(NewMusicService.ACTION_PREVIOUS);
+            musicIntent.putExtra(NewMusicService.ARG_MUSIC, music);
+            sendBroadcast(musicIntent);
+        }
     }
 
     private boolean isPlayerPanelHidden() {
@@ -219,13 +272,15 @@ public class MainActivity extends AppCompatActivity implements
         return new Runnable() {
             @Override
             public void run() {
-                musicProgressPosition++;
-                progressBarMusic.setProgress(musicProgressPosition);
-                seekBar.setProgress(musicProgressPosition);
-                textViewCurrentPosition.setText(DurationConverter
-                        .getDurationFormat(musicProgressPosition));
-                if (musicProgressPosition < musicDuration) {
-                    handler.postDelayed(musicPositionRunnable, 1000);
+                if (isBounded) {
+                    int currentPlaybackPosition = newMusicService.getCurrentPlaybackPosition();
+                    progressBarMusic.setProgress(currentPlaybackPosition);
+                    seekBar.setProgress(currentPlaybackPosition);
+                    textViewCurrentPosition.setText(DurationConverter
+                            .getDurationFormat(currentPlaybackPosition));
+                    if (currentPlaybackPosition < musicDuration) {
+                        handler.postDelayed(musicPositionRunnable, 1000);
+                    }
                 }
             }
         };
@@ -236,14 +291,16 @@ public class MainActivity extends AppCompatActivity implements
             @Override
             public void onReceive(Context context, Intent intent) {
                 App.Log("onReceive");
-                if(intent == null){
+                if (intent == null) {
                     App.Log("intent null");
                 }
                 String action = intent.getAction();
                 App.Log("point");
-                if (Objects.equals(action, MusicService.ACTION_PLAY)) {
+                if (Objects.equals(action, NewMusicService.ACTION_PLAY)) {
                     App.Log("On Action play");
-                    BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
+                    Intent serviceIntent = new Intent(MainActivity.this, NewMusicService.class);
+                    bindService(serviceIntent, serviceConnection, 0);
+                    BaseMusic music = intent.getParcelableExtra(NewMusicService.ARG_MUSIC);
                     setSongDescriptions(music);
                     setPauseButtons();
                     setPlaybackPosition(0);
@@ -251,19 +308,12 @@ public class MainActivity extends AppCompatActivity implements
                     handler.removeCallbacks(musicPositionRunnable);
                 }
 
-                if (Objects.equals(action, MusicService.ACTION_PAUSE_OR_RESUME)) {
-                    App.Log("On Action pause or resume");
-                    boolean isPause = intent.getBooleanExtra(MusicService.ARG_IS_PAUSE, true);
-                    if (isPause) {
-                        setPlayButtons();
-                        handler.removeCallbacks(musicPositionRunnable);
-                    } else {
-                        setPauseButtons();
-                        handler.post(musicPositionRunnable);
-                    }
+                if (Objects.equals(action, NewMusicService.ACTION_PAUSE_OR_RESUME)) {
+                    App.Log("new pause resume");
+                    changePlayingState();
                 }
 
-                if (Objects.equals(action, MusicService.ACTION_NEXT)) {
+                if (Objects.equals(action, NewMusicService.ACTION_NEXT)) {
                     App.Log("On Action next");
                     BaseMusic music = intent.getParcelableExtra("music");
                     setSongDescriptions(music);
@@ -272,7 +322,7 @@ public class MainActivity extends AppCompatActivity implements
                     handler.removeCallbacks(musicPositionRunnable);
                 }
 
-                if (Objects.equals(action, MusicService.ACTION_PREVIOUS)) {
+                if (Objects.equals(action, NewMusicService.ACTION_PREVIOUS)) {
                     App.Log("On Action previous");
                     BaseMusic music = intent.getParcelableExtra("music");
                     setSongDescriptions(music);
@@ -281,26 +331,7 @@ public class MainActivity extends AppCompatActivity implements
                     handler.removeCallbacks(musicPositionRunnable);
                 }
 
-                if (Objects.equals(action, MusicService.ACTION_PLAYER_RESUME)) {
-                    App.Log("On Action player resume");
-                    boolean isPause = intent.getBooleanExtra(MusicService.ARG_IS_PAUSE, true);
-                    int playbackPosition = intent.getIntExtra(MusicService.ARG_PLAYBACK_POSITION, 0);
-                    BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
-                    isLooping = intent.getBooleanExtra(MusicService.ARG_IS_LOOPING, false);
-                    changeRepeatButtonState();
-                    if (isPause) {
-                        hidePlayerPanel();
-                    } else {
-                        showPlayerPanel();
-                        setSongDescriptions(music);
-                        setPauseButtons();
-                        setDurationForBars(music.getDuration());
-                        setPlaybackPosition(playbackPosition);
-                        handler.post(musicPositionRunnable);
-                    }
-                }
-
-                if (Objects.equals(action, MusicService.ACTION_BEGIN_PLAYING)) {
+                if (Objects.equals(action, NewMusicService.ACTION_BEGIN_PLAYING)) {
                     App.Log("On Action begin playing");
                     handler.removeCallbacks(musicPositionRunnable);
                     setPauseButtons();
@@ -308,7 +339,7 @@ public class MainActivity extends AppCompatActivity implements
                     handler.post(musicPositionRunnable);
                 }
 
-                if (Objects.equals(action, MusicService.ACTION_CLOSE)) {
+                if (Objects.equals(action, NewMusicService.ACTION_CLOSE)) {
                     App.Log("on Action close");
                     handler.removeCallbacks(musicPositionRunnable);
                     hidePlayerPanel();
@@ -318,7 +349,21 @@ public class MainActivity extends AppCompatActivity implements
         };
     }
 
-    private void changeRepeatButtonState() {
+    private void changePlayingState() {
+        if (isBounded) {
+            if (newMusicService.isPlaying()) {
+                App.Log("change playing");
+                handler.post(musicPositionRunnable);
+                setPauseButtons();
+            } else {
+                App.Log("change not playing");
+                handler.removeCallbacks(musicPositionRunnable);
+                setPlayButtons();
+            }
+        }
+    }
+
+    private void changeRepeatButtonState(boolean isLooping) {
         if (isLooping) {
             imageButtonRepeat.setBackground(ContextCompat.getDrawable(this,
                     R.drawable.button_repeat_activated));
@@ -336,7 +381,7 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private void changeShuffleButtonState() {
+    private void changeShuffleButtonState(boolean isShuffling) {
         if (isShuffling) {
             imageButtonShuffle.setBackground(ContextCompat.getDrawable(this,
                     R.drawable.button_repeat_activated));
@@ -386,7 +431,6 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void setPlaybackPosition(int playbackPosition) {
-        musicProgressPosition = playbackPosition;
         progressBarMusic.setProgress(playbackPosition);
         seekBar.setProgress(playbackPosition);
     }
@@ -411,14 +455,16 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        Intent intent = new Intent(this, MusicService.class);
-        intent.setAction(MusicService.ACTION_PLAYER_RESUME);
-        startService(intent);
+        Intent serviceIntent = new Intent(this, NewMusicService.class);
+        bindService(serviceIntent, serviceConnection, 0);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        if (!isBounded) return;
+        unbindService(serviceConnection);
+        isBounded = false;
         handler.removeCallbacks(musicPositionRunnable);
     }
 
@@ -441,10 +487,7 @@ public class MainActivity extends AppCompatActivity implements
         if (fromUser) {
             App.Log("progress: " + Integer.toString(progress));
             setPlaybackPosition(progress);
-            Intent intent = new Intent(this, MusicService.class);
-            intent.setAction(MusicService.ACTION_SEEK_BAR_MOVING);
-            intent.putExtra(MusicService.ARG_PLAYBACK_POSITION, progress);
-            startService(intent);
+            newMusicService.seekTo(progress);
         }
 
     }

@@ -18,6 +18,7 @@ public interface MusicFragmentContract {
         ArrayList<Music> getMusic();
         void setAlbumImageForMusic(String url, int position);
         void setMusicItems(List<Music> items, boolean isRefreshing);
+        void showErrorToast(String message);
     }
 
     interface Presenter extends BaseMusicFragmentPresenter {

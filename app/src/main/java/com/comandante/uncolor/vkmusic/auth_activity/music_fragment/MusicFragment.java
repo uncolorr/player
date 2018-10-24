@@ -11,15 +11,16 @@ import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
 import android.widget.ProgressBar;
+import android.widget.Toast;
 
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.GetMusicRequestBody;
+import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.models.Music;
 import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
-import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.flurry.android.FlurryAgent;
 
 import org.androidannotations.annotations.AfterViews;
@@ -47,6 +48,8 @@ public class MusicFragment extends Fragment implements MusicFragmentContract.Vie
 
     @ViewById
     EditText editTextSearch;
+
+
 
     private MusicFragmentContract.Presenter presenter;
 
@@ -79,10 +82,10 @@ public class MusicFragment extends Fragment implements MusicFragmentContract.Vie
             public void onReceive(Context context, Intent intent) {
                 App.Log("on fragment receive");
                 String action = intent.getAction();
-                if (Objects.equals(action, MusicService.ACTION_CLOSE)) {
+                if (Objects.equals(action, NewMusicService.ACTION_CLOSE)) {
                     musicAdapter.unselectCurrentTrack();
                 } else {
-                    BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
+                    BaseMusic music = intent.getParcelableExtra(NewMusicService.ARG_MUSIC);
                     if (music == null) {
                         return;
                     }
@@ -166,5 +169,10 @@ public class MusicFragment extends Fragment implements MusicFragmentContract.Vie
             musicAdapter.clear();
         }
         musicAdapter.add(items);
+    }
+
+    @Override
+    public void showErrorToast(String message) {
+        Toast.makeText(getContext(), message,  Toast.LENGTH_LONG).show();
     }
 }

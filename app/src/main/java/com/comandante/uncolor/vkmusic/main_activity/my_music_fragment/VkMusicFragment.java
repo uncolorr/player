@@ -18,6 +18,7 @@ import android.widget.Toast;
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.GetVkMusicBody;
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.SearchVkMusicBody;
 import com.comandante.uncolor.vkmusic.Apis.response_models.CaptchaErrorResponse;
+import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 import com.comandante.uncolor.vkmusic.widgets.CaptchaDialog;
 import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.R;
@@ -27,7 +28,6 @@ import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.models.VkMusic;
 import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
 import com.comandante.uncolor.vkmusic.music_adapter.OnLoadMoreListener;
-import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.comandante.uncolor.vkmusic.services.download.DownloadService;
 import com.flurry.android.FlurryAgent;
 import com.google.android.gms.ads.AdRequest;
@@ -183,8 +183,6 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
             getVkMusicBody = new GetVkMusicBody();
             presenter.onLoadMusic(getVkMusicBody, true);
         }
-
-
     }
 
     @Click(R.id.radioButtonDownloadedMusic)
@@ -200,8 +198,6 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
                 realm.commitTransaction();
             }
         }
-
-
     }
 
     private BroadcastReceiver getMusicReceiver() {
@@ -220,12 +216,12 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
                     BaseMusic music = intent.getParcelableExtra(DownloadService.ARG_MUSIC);
                     musicAdapter.setDefaultMusicState(music);
                     showErrorToast("Ошибка при скачивании трека");
-                } else if (Objects.equals(action, MusicService.ACTION_CLOSE)) {
+                } else if (Objects.equals(action, NewMusicService.ACTION_CLOSE)) {
                     musicAdapter.unselectCurrentTrack();
                 } else if (Objects.equals(action, SettingsFragment.ACTION_CLEAR_CACHE)) {
                     musicAdapter.checkCache();
                 } else {
-                    BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
+                    BaseMusic music = intent.getParcelableExtra(NewMusicService.ARG_MUSIC);
                     if (music == null) {
                         return;
                     }

@@ -6,7 +6,7 @@ android {
         applicationId "com.comandante.uncolor.vkmusic"
         minSdkVersion 19
         targetSdkVersion 27
-        versionCode 4
+        versionCode 5
         versionName "1.03"
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }

@@ -25,6 +25,7 @@
             android:id="@+id/progressBarMusic"
             style="?android:attr/progressBarStyleHorizontal"
             android:layout_width="match_parent"
+            android:visibility="gone"
             android:layout_height="4dp"
             android:theme="@style/ProgressBarStyle" />
 
@@ -40,6 +41,7 @@
             android:id="@+id/playerPanel"
             android:layout_width="match_parent"
             android:layout_height="56dp"
+            android:visibility="gone"
             android:background="@android:color/white"
             android:orientation="horizontal">
 

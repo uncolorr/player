@@ -1,9 +1,12 @@
 package com.comandante.uncolor.vkmusic.auth_activity;
 
 import android.content.BroadcastReceiver;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 import android.os.Handler;
+import android.os.IBinder;
 import android.support.annotation.NonNull;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
@@ -17,12 +20,12 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
+import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.main_activity.MainActivity;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
-import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.comandante.uncolor.vkmusic.utils.DurationConverter;
 import com.comandante.uncolor.vkmusic.widgets.SquareImageView;
 import com.comandante.uncolor.vkmusic.widgets.StaticViewPager;
@@ -37,7 +40,6 @@ import java.util.Objects;
 @EActivity(R.layout.activity_auth)
 public class AuthActivity extends AppCompatActivity implements
         BottomNavigationView.OnNavigationItemSelectedListener, SeekBar.OnSeekBarChangeListener{
-
 
     @ViewById
     StaticViewPager viewPager;
@@ -93,19 +95,23 @@ public class AuthActivity extends AppCompatActivity implements
     @ViewById
     ProgressBar progressBarMusic;
 
+    private ServiceConnection serviceConnection;
+
+    private NewMusicService newMusicService;
+
     private AuthFragmentPagerAdapter adapter;
 
     private BottomSheetBehavior sheetBehavior;
 
     private BroadcastReceiver musicReceiver;
 
-    private int musicProgressPosition;
-
     private int musicDuration;
 
     private Runnable musicPositionRunnable;
 
     private Handler handler;
+
+    private boolean isBounded;
 
 
     public static Intent getInstance(Context context){
@@ -133,6 +139,21 @@ public class AuthActivity extends AppCompatActivity implements
         seekBar.setOnSeekBarChangeListener(this);
         musicReceiver = getMusicReceiver();
         registerReceiver(musicReceiver, IntentFilterManager.getMusicIntentFilter());
+        serviceConnection = new ServiceConnection() {
+            @Override
+            public void onServiceConnected(ComponentName name, IBinder service) {
+                App.Log("onServiceConnected");
+                newMusicService  = ((NewMusicService.MusicBinder)service).getService();
+                bindPlayerState();
+                isBounded = true;
+            }
+
+            @Override
+            public void onServiceDisconnected(ComponentName name) {
+                App.Log("onServiceDisconnected");
+                isBounded = false;
+            }
+        };
     }
 
     @Click(R.id.playerPanel)
@@ -147,23 +168,59 @@ public class AuthActivity extends AppCompatActivity implements
 
     @Click({R.id.imageButtonPanelPlay, R.id.imageButtonPlayerPlay})
     void onPlayButtonClick() {
-        Intent intent = new Intent(this, MusicService.class);
-        intent.setAction(MusicService.ACTION_PAUSE_OR_RESUME);
-        startService(intent);
+        if(isBounded){
+            if(newMusicService.isPlaying()){
+                newMusicService.pause();
+                handler.removeCallbacks(musicPositionRunnable);
+                setPlayButtons();
+            }
+            else {
+                newMusicService.resume();
+                handler.post(musicPositionRunnable);
+                setPauseButtons();
+            }
+        }
+    }
+
+    private void changePlayingState(){
+        if(isBounded){
+            if(newMusicService.isPlaying()){
+                handler.post(musicPositionRunnable);
+                setPauseButtons();
+            }
+            else {
+                handler.removeCallbacks(musicPositionRunnable);
+                setPlayButtons();
+            }
+        }
     }
 
     @Click({R.id.imageButtonPanelNext, R.id.imageButtonPlayerNext})
     void onNextButtonClick() {
-        Intent intent = new Intent(this, MusicService.class);
-        intent.setAction(MusicService.ACTION_NEXT);
-        startService(intent);
+        if(isBounded) {
+            BaseMusic music = newMusicService.next(true);
+            setSongDescriptions(music);
+            setPauseButtons();
+            setPlaybackPosition(0);
+            handler.removeCallbacks(musicPositionRunnable);
+            Intent musicIntent = new Intent(NewMusicService.ACTION_NEXT);
+            musicIntent.putExtra(NewMusicService.ARG_MUSIC, music);
+            sendBroadcast(musicIntent);
+        }
     }
 
     @Click(R.id.imageButtonPlayerPrevious)
     void onPreviousButtonClick() {
-        Intent intent = new Intent(this, MusicService.class);
-        intent.setAction(MusicService.ACTION_PREVIOUS);
-        startService(intent);
+        if(isBounded) {
+            BaseMusic music = newMusicService.previous();
+            setSongDescriptions(music);
+            setPauseButtons();
+            setPlaybackPosition(0);
+            handler.removeCallbacks(musicPositionRunnable);
+            Intent musicIntent = new Intent(NewMusicService.ACTION_PREVIOUS);
+            musicIntent.putExtra(NewMusicService.ARG_MUSIC, music);
+            sendBroadcast(musicIntent);
+        }
     }
 
     private boolean isPlayerPanelHidden() {
@@ -186,13 +243,15 @@ public class AuthActivity extends AppCompatActivity implements
         return new Runnable() {
             @Override
             public void run() {
-                musicProgressPosition++;
-                progressBarMusic.setProgress(musicProgressPosition);
-                seekBar.setProgress(musicProgressPosition);
-                textViewCurrentPosition.setText(DurationConverter
-                        .getDurationFormat(musicProgressPosition));
-                if (musicProgressPosition < musicDuration) {
-                    handler.postDelayed(musicPositionRunnable, 1000);
+                if(isBounded) {
+                    int currentPlaybackPosition = newMusicService.getCurrentPlaybackPosition();
+                    progressBarMusic.setProgress(currentPlaybackPosition);
+                    seekBar.setProgress(currentPlaybackPosition);
+                    textViewCurrentPosition.setText(DurationConverter
+                            .getDurationFormat(currentPlaybackPosition));
+                    if (currentPlaybackPosition < musicDuration) {
+                        handler.postDelayed(musicPositionRunnable, 1000);
+                    }
                 }
             }
         };
@@ -204,8 +263,10 @@ public class AuthActivity extends AppCompatActivity implements
             public void onReceive(Context context, Intent intent) {
                 App.Log("onReceive");
                 String action = intent.getAction();
-                if (Objects.equals(action, MusicService.ACTION_PLAY)) {
-                    BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
+                if (Objects.equals(action, NewMusicService.ACTION_PLAY)) {
+                    Intent serviceIntent = new Intent(AuthActivity.this, NewMusicService.class);
+                    bindService(serviceIntent, serviceConnection, 0);
+                    BaseMusic music = intent.getParcelableExtra(NewMusicService.ARG_MUSIC);
                     setSongDescriptions(music);
                     setPauseButtons();
                     setPlaybackPosition(0);
@@ -213,18 +274,12 @@ public class AuthActivity extends AppCompatActivity implements
                     handler.removeCallbacks(musicPositionRunnable);
                 }
 
-                if (Objects.equals(action, MusicService.ACTION_PAUSE_OR_RESUME)) {
-                    boolean isPause = intent.getBooleanExtra(MusicService.ARG_IS_PAUSE, true);
-                    if (isPause) {
-                        setPlayButtons();
-                        handler.removeCallbacks(musicPositionRunnable);
-                    } else {
-                        setPauseButtons();
-                        handler.post(musicPositionRunnable);
-                    }
+                if (Objects.equals(action, NewMusicService.ACTION_PAUSE_OR_RESUME)) {
+                    App.Log("new pause resume");
+                    changePlayingState();
                 }
 
-                if (Objects.equals(action, MusicService.ACTION_NEXT)) {
+                if (Objects.equals(action, NewMusicService.ACTION_NEXT)) {
                     BaseMusic music = intent.getParcelableExtra("music");
                     setSongDescriptions(music);
                     setPauseButtons();
@@ -232,7 +287,7 @@ public class AuthActivity extends AppCompatActivity implements
                     handler.removeCallbacks(musicPositionRunnable);
                 }
 
-                if (Objects.equals(action, MusicService.ACTION_PREVIOUS)) {
+                if (Objects.equals(action, NewMusicService.ACTION_PREVIOUS)) {
                     BaseMusic music = intent.getParcelableExtra("music");
                     setSongDescriptions(music);
                     setPauseButtons();
@@ -240,30 +295,14 @@ public class AuthActivity extends AppCompatActivity implements
                     handler.removeCallbacks(musicPositionRunnable);
                 }
 
-                if (Objects.equals(action, MusicService.ACTION_PLAYER_RESUME)) {
-                    boolean isPause = intent.getBooleanExtra(MusicService.ARG_IS_PAUSE, true);
-                    int playbackPosition = intent.getIntExtra(MusicService.ARG_PLAYBACK_POSITION, 0);
-                    BaseMusic music = intent.getParcelableExtra(MusicService.ARG_MUSIC);
-                    if (isPause) {
-                        hidePlayerPanel();
-                    } else {
-                        showPlayerPanel();
-                        setSongDescriptions(music);
-                        setPauseButtons();
-                        setDurationForBars(music.getDuration());
-                        setPlaybackPosition(playbackPosition);
-                        handler.post(musicPositionRunnable);
-                    }
-                }
-
-                if (Objects.equals(action, MusicService.ACTION_BEGIN_PLAYING)) {
+                if (Objects.equals(action, NewMusicService.ACTION_BEGIN_PLAYING)) {
                     handler.removeCallbacks(musicPositionRunnable);
                     setPauseButtons();
                     setPlaybackPosition(0);
                     handler.post(musicPositionRunnable);
                 }
 
-                if (Objects.equals(action, MusicService.ACTION_CLOSE)) {
+                if (Objects.equals(action, NewMusicService.ACTION_CLOSE)) {
                     App.Log("Action close received");
                     handler.removeCallbacks(musicPositionRunnable);
                     hidePlayerPanel();
@@ -305,7 +344,6 @@ public class AuthActivity extends AppCompatActivity implements
     }
 
     private void setPlaybackPosition(int playbackPosition) {
-        musicProgressPosition = playbackPosition;
         progressBarMusic.setProgress(playbackPosition);
         seekBar.setProgress(playbackPosition);
     }
@@ -338,14 +376,28 @@ public class AuthActivity extends AppCompatActivity implements
     @Override
     protected void onResume() {
         super.onResume();
-        Intent intent = new Intent(this, MusicService.class);
-        intent.setAction(MusicService.ACTION_PLAYER_RESUME);
-        startService(intent);
+        App.Log("onResume auth");
+        Intent serviceIntent = new Intent(this, NewMusicService.class);
+        bindService(serviceIntent, serviceConnection, 0);
+    }
+
+    private void bindPlayerState(){
+        if(newMusicService.isPlaying()){
+            BaseMusic music = newMusicService.getCurrentMusic();
+            App.Log("player playing");
+            showPlayerPanel();
+            setPauseButtons();
+            setSongDescriptions(music);
+            handler.post(musicPositionRunnable);
+        }
     }
 
     @Override
     protected void onStop() {
         super.onStop();
+        if (!isBounded) return;
+        unbindService(serviceConnection);
+        isBounded = false;
         handler.removeCallbacks(musicPositionRunnable);
     }
 
@@ -376,10 +428,7 @@ public class AuthActivity extends AppCompatActivity implements
         if(fromUser){
             App.Log("progress: " + Integer.toString(progress));
             setPlaybackPosition(progress);
-            Intent intent = new Intent(this, MusicService.class);
-            intent.setAction(MusicService.ACTION_SEEK_BAR_MOVING);
-            intent.putExtra(MusicService.ARG_PLAYBACK_POSITION, progress);
-            startService(intent);
+            newMusicService.seekTo(progress);
         }
     }
 

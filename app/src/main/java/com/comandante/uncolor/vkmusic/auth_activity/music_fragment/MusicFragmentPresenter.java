@@ -11,7 +11,7 @@ import com.comandante.uncolor.vkmusic.Apis.response_models.album_image_model.Ima
 import com.comandante.uncolor.vkmusic.Apis.response_models.MusicListResponseModel;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
-import com.comandante.uncolor.vkmusic.services.music.MusicService;
+import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 import com.comandante.uncolor.vkmusic.utils.MessageReporter;
 import com.flurry.android.FlurryAgent;
 
@@ -35,6 +35,7 @@ public class MusicFragmentPresenter implements MusicFragmentContract.Presenter, 
     @Override
     public void onFailure(int code, String message) {
         view.hideProgress();
+        view.showErrorToast("Неизвестная ошибка");
     }
 
     @Override
@@ -51,11 +52,11 @@ public class MusicFragmentPresenter implements MusicFragmentContract.Presenter, 
 
     @Override
     public void onPlayTrack(BaseMusic music, int position) {
-        Intent intent = new Intent(context, MusicService.class);
-        intent.setAction(MusicService.ACTION_PLAY);
-        intent.putExtra(MusicService.ARG_MUSIC, music);
-        intent.putParcelableArrayListExtra(MusicService.ARG_PLAYLIST, view.getMusic());
-        intent.putExtra(MusicService.ARG_POSITION, position);
+        Intent intent = new Intent(context, NewMusicService.class);
+        intent.setAction(NewMusicService.ACTION_PLAY);
+        intent.putExtra(NewMusicService.ARG_MUSIC, music);
+        intent.putParcelableArrayListExtra(NewMusicService.ARG_PLAYLIST, view.getMusic());
+        intent.putExtra(NewMusicService.ARG_POSITION, position);
         context.startService(intent);
     }
 
@@ -74,10 +75,10 @@ public class MusicFragmentPresenter implements MusicFragmentContract.Presenter, 
         return new ApiResponse.ApiResponseListener<AlbumImageResponseModel>() {
             @Override
             public void onResponse(AlbumImageResponseModel result) throws IOException {
-                if(result.getTrack() == null){
+                if (result.getTrack() == null) {
                     return;
                 }
-                if(result.getTrack().getAlbum() != null) {
+                if (result.getTrack().getAlbum() != null) {
                     List<ImageInfo> images = result.getTrack().getAlbum().getImages();
                     for (int i = 0; i < images.size(); i++) {
                         if (Objects.equals(images.get(i).getSize(), "extralarge")) {
@@ -89,6 +90,7 @@ public class MusicFragmentPresenter implements MusicFragmentContract.Presenter, 
             }
         };
     }
+
     private void showMessageAboutAuth() {
         FlurryAgent.logEvent(context.getString(R.string.log_download_before_auth));
         MessageReporter.showMessageAboutAuth(context);
@@ -99,7 +101,11 @@ public class MusicFragmentPresenter implements MusicFragmentContract.Presenter, 
             @Override
             public void onResponse(MusicListResponseModel result) {
                 view.hideProgress();
-                view.setMusicItems(result.getData(), isRefreshing);
+                if (result.getData() != null) {
+                    view.setMusicItems(result.getData(), isRefreshing);
+                } else {
+                    view.showErrorToast("Ошибка при поиске");
+                }
             }
         };
     }

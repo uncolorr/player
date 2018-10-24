@@ -7,7 +7,7 @@ import android.widget.EditText;
 
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.main_activity.MainActivity;
-import com.comandante.uncolor.vkmusic.services.music.MusicService;
+import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 import com.comandante.uncolor.vkmusic.utils.LoadingDialog;
 import com.comandante.uncolor.vkmusic.utils.MessageReporter;
 import com.flurry.android.FlurryAgent;
@@ -73,7 +73,7 @@ public class AuthFragment extends Fragment implements AuthFragmentContract.View{
     @Override
     public void login() {
         FlurryAgent.logEvent(getContext().getString(R.string.log_auth_success));
-        getActivity().stopService(new Intent(getContext(), MusicService.class));
+        getActivity().stopService(new Intent(getContext(), NewMusicService.class));
         getActivity().finish();
         startActivity(MainActivity.getInstance(getContext()));
     }

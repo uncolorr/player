@@ -39,7 +39,7 @@
         </provider>
 
         <service
-            android:name="com.comandante.uncolor.vkmusic.services.music.MusicService"
+            android:name="com.comandante.uncolor.vkmusic.services.music.NewMusicService"
             android:exported="false">
         </service>
 

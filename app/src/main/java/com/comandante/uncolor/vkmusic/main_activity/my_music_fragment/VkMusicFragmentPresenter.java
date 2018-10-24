@@ -16,8 +16,9 @@ import com.comandante.uncolor.vkmusic.application.AppPermissionManager;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.models.VkMusic;
 import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
-import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.comandante.uncolor.vkmusic.services.download.DownloadService;
+
+import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 
 import java.io.IOException;
 import java.util.List;
@@ -177,11 +178,11 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
 
     @Override
     public void onPlayTrack(BaseMusic music, int position) {
-        Intent intent = new Intent(context, MusicService.class);
-        intent.setAction(MusicService.ACTION_PLAY);
-        intent.putExtra(MusicService.ARG_MUSIC, music);
-        intent.putParcelableArrayListExtra(MusicService.ARG_PLAYLIST, view.getMusic());
-        intent.putExtra(MusicService.ARG_POSITION, position);
+        Intent intent = new Intent(context, NewMusicService.class);
+        intent.setAction(NewMusicService.ACTION_PLAY);
+        intent.putExtra(NewMusicService.ARG_MUSIC, music);
+        intent.putParcelableArrayListExtra(NewMusicService.ARG_PLAYLIST, view.getMusic());
+        intent.putExtra(NewMusicService.ARG_POSITION, position);
         context.startService(intent);
     }
 
