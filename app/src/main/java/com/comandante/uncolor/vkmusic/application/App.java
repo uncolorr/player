@@ -2,17 +2,17 @@ package com.comandante.uncolor.vkmusic.application;
 
 import android.annotation.SuppressLint;
 import android.app.Application;
-import android.app.NotificationChannel;
-import android.app.NotificationManager;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.SharedPreferences;
-import android.graphics.Color;
 import android.provider.Settings;
 import android.util.Base64;
 import android.util.Log;
 
 import com.comandante.uncolor.vkmusic.Apis.Api;
+import com.comandante.uncolor.vkmusic.services.download.NewDownloadService;
+import com.crashlytics.android.Crashlytics;
 import com.flurry.android.FlurryAgent;
 import com.google.android.gms.ads.MobileAds;
 
@@ -22,6 +22,7 @@ import javax.crypto.SecretKeyFactory;
 import javax.crypto.spec.PBEKeySpec;
 import javax.crypto.spec.PBEParameterSpec;
 
+import io.fabric.sdk.android.Fabric;
 import io.realm.Realm;
 import io.realm.RealmConfiguration;
 
@@ -53,6 +54,7 @@ public class App extends Application {
         new FlurryAgent.Builder()
                 .withLogEnabled(true)
                 .build(this, FLURRY_API_KEY);
+        Fabric.with(this, new Crashlytics());
 
         Api.init();
         instance = this;
@@ -61,6 +63,7 @@ public class App extends Application {
         Realm.init(this);
         RealmConfiguration config = new RealmConfiguration.Builder().name("music.realm").build();
         Realm.setDefaultConfiguration(config);
+        startService(new Intent(this, NewDownloadService.class));
     }
 
     public static Context getContext() {

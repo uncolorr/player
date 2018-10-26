@@ -7,6 +7,7 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 
+import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
 import android.widget.Toast;
@@ -124,7 +125,6 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
                 new File(Environment
                         .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
                         artist + " - " + title + ".mp3");
-        App.Log("bbb: " + outputFile.getAbsolutePath());
         OutputStream output = new FileOutputStream(outputFile);
         long total = 0;
         long startTime = System.currentTimeMillis();
@@ -135,8 +135,6 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
             double current = Math.round(total / (Math.pow(1024, 2)));
 
             int progress = (int) ((total * 100) / fileSize);
-            App.Log("progress: " + progress);
-
             long currentTime = System.currentTimeMillis() - startTime;
 
             Download download = new Download();
@@ -164,7 +162,7 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
     @Override
     public void onDestroy() {
         super.onDestroy();
-        App.Log("onDestroy");
+        App.Log("onDestroy Download service");
     }
 
 

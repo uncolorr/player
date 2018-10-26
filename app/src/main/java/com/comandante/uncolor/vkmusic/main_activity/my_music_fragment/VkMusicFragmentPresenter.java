@@ -3,6 +3,7 @@ package com.comandante.uncolor.vkmusic.main_activity.my_music_fragment;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
+import android.content.ServiceConnection;
 
 import com.comandante.uncolor.vkmusic.Apis.Api;
 import com.comandante.uncolor.vkmusic.Apis.ApiResponse;
@@ -18,6 +19,7 @@ import com.comandante.uncolor.vkmusic.models.VkMusic;
 import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
 import com.comandante.uncolor.vkmusic.services.download.DownloadService;
 
+import com.comandante.uncolor.vkmusic.services.download.NewDownloadService;
 import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 
 import java.io.IOException;
@@ -38,6 +40,7 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
     private Context context;
     private VkMusicFragmentContract.View view;
     private Realm realm;
+
 
     public VkMusicFragmentPresenter(Context context, VkMusicFragmentContract.View view) {
         this.context = context;

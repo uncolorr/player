@@ -21,6 +21,10 @@
             android:name="com.google.android.gms.ads.APPLICATION_ID"
             android:value="ca-app-pub-7685514492081797~6471620101"/>
 
+        <meta-data
+            android:name="io.fabric.ApiKey"
+            android:value="518352482e62638b9f32e71b3690575212670da3"
+            />
 
         <activity
             android:name="com.comandante.uncolor.vkmusic.main_activity.MainActivity_"
@@ -48,6 +52,13 @@
             android:exported="false">
 
         </service>
+
+        <service
+            android:name="com.comandante.uncolor.vkmusic.services.download.NewDownloadService"
+            android:exported="false">
+
+        </service>
+
 
         <activity
             android:name="com.comandante.uncolor.vkmusic.auth_activity.AuthActivity_"

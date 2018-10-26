@@ -1,9 +1,11 @@
 package com.comandante.uncolor.vkmusic.utils;
 
+import android.app.DownloadManager;
 import android.content.IntentFilter;
 
 import com.comandante.uncolor.vkmusic.main_activity.settings_fragment.SettingsFragment;
 import com.comandante.uncolor.vkmusic.services.download.DownloadService;
+import com.comandante.uncolor.vkmusic.services.download.NewDownloadService;
 import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 
 /**
@@ -24,6 +26,12 @@ public class IntentFilterManager {
         intentFilter.addAction(DownloadService.ACTION_DOWNLOAD_COMPLETED);
         intentFilter.addAction(DownloadService.ACTION_DOWNLOAD_STARTED);
         intentFilter.addAction(SettingsFragment.ACTION_CLEAR_CACHE);
+        return intentFilter;
+    }
+
+    public static IntentFilter getDownloadIntentFilter(){
+        IntentFilter intentFilter = new IntentFilter();
+        intentFilter.addAction(DownloadManager.ACTION_DOWNLOAD_COMPLETE);
         return intentFilter;
     }
 }

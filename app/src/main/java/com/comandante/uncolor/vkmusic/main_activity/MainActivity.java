@@ -1,10 +1,12 @@
 package com.comandante.uncolor.vkmusic.main_activity;
 
+import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.database.Cursor;
 import android.graphics.PorterDuff;
 import android.os.Handler;
 import android.os.IBinder;
@@ -22,7 +24,7 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.comandante.uncolor.vkmusic.auth_activity.AuthActivity;
+import com.comandante.uncolor.vkmusic.services.download.NewDownloadService;
 import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.R;
@@ -31,6 +33,7 @@ import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.utils.DurationConverter;
 import com.comandante.uncolor.vkmusic.widgets.SquareImageView;
 import com.comandante.uncolor.vkmusic.widgets.StaticViewPager;
+import com.github.lzyzsd.circleprogress.DonutProgress;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
@@ -41,7 +44,8 @@ import java.util.Objects;
 
 @EActivity(R.layout.activity_main)
 public class MainActivity extends AppCompatActivity implements
-        BottomNavigationView.OnNavigationItemSelectedListener, SeekBar.OnSeekBarChangeListener {
+        BottomNavigationView.OnNavigationItemSelectedListener,
+        SeekBar.OnSeekBarChangeListener{
 
     @ViewById
     StaticViewPager viewPager;
@@ -103,17 +107,23 @@ public class MainActivity extends AppCompatActivity implements
 
     private BroadcastReceiver musicReceiver;
 
+    private BroadcastReceiver downloadReceiver;
+
     private Runnable musicPositionRunnable;
 
     private Handler handler;
 
     private int musicDuration;
 
-    private ServiceConnection serviceConnection;
+    private ServiceConnection serviceConnectionForMusic;
+
 
     private NewMusicService newMusicService;
 
-    private boolean isBounded;
+
+    private boolean isBoundedMusic = false;
+
+
 
     public static Intent getInstance(Context context) {
         return new Intent(context, MainActivity_.class);
@@ -129,23 +139,52 @@ public class MainActivity extends AppCompatActivity implements
         viewPager.setOffscreenPageLimit(3);
         viewPager.setPagingEnabled(false);
         musicReceiver = getMusicReceiver();
+        downloadReceiver = getDownloadReceiver();
         registerReceiver(musicReceiver, IntentFilterManager.getMusicIntentFilter());
+        registerReceiver(downloadReceiver, IntentFilterManager.getDownloadIntentFilter());
         handler = new Handler();
         musicPositionRunnable = getMusicPositionRunnable();
         seekBar.setOnSeekBarChangeListener(this);
-        serviceConnection = new ServiceConnection() {
+        serviceConnectionForMusic = new ServiceConnection() {
             @Override
             public void onServiceConnected(ComponentName name, IBinder service) {
                 App.Log("onServiceConnected");
                 newMusicService = ((NewMusicService.MusicBinder) service).getService();
                 bindPlayerState();
-                isBounded = true;
+                isBoundedMusic = true;
             }
 
             @Override
             public void onServiceDisconnected(ComponentName name) {
                 App.Log("onServiceDisconnected");
-                isBounded = false;
+                isBoundedMusic = false;
+            }
+        };
+    }
+
+    private BroadcastReceiver getDownloadReceiver() {
+        return new BroadcastReceiver() {
+            @Override
+            public void onReceive(Context context, Intent intent) {
+                App.Log("New Download received");
+                DownloadManager downloadManager = ((DownloadManager) getSystemService(DOWNLOAD_SERVICE));
+                String action = intent.getAction();
+                if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
+
+                    App.Log("New Download complete");
+                    /*long downloadId = intent.getLongExtra(
+                            DownloadManager.EXTRA_DOWNLOAD_ID, 0);
+                    DownloadManager.Query query = new DownloadManager.Query();
+                    query.setFilterById(enqueue);
+                    Cursor c = downloadManager.query(query);
+                    if (c.moveToFirst()) {
+                        int columnIndex = c
+                                .getColumnIndex(DownloadManager.COLUMN_STATUS);
+                        if (DownloadManager.STATUS_SUCCESSFUL == c.getInt(columnIndex)) {
+                            progressBarDownloadProgress.setVisibility(View.GONE);
+                        }
+                    }*/
+                }
             }
         };
     }
@@ -194,7 +233,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Click({R.id.imageButtonPanelPlay, R.id.imageButtonPlayerPlay})
     void onPlayButtonClick() {
-        if (isBounded) {
+        if (isBoundedMusic) {
             if (newMusicService.isPlaying()) {
                 newMusicService.pause();
                 handler.removeCallbacks(musicPositionRunnable);
@@ -209,7 +248,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Click({R.id.imageButtonPanelNext, R.id.imageButtonPlayerNext})
     void onNextButtonClick() {
-        if (isBounded) {
+        if (isBoundedMusic) {
             BaseMusic music = newMusicService.next(true);
             if(music != null) {
                 setSongDescriptions(music);
@@ -225,7 +264,7 @@ public class MainActivity extends AppCompatActivity implements
 
     @Click(R.id.imageButtonPlayerPrevious)
     void onPreviousButtonClick() {
-        if (isBounded) {
+        if (isBoundedMusic) {
             BaseMusic music = newMusicService.previous();
             setSongDescriptions(music);
             setPauseButtons();
@@ -272,7 +311,7 @@ public class MainActivity extends AppCompatActivity implements
         return new Runnable() {
             @Override
             public void run() {
-                if (isBounded) {
+                if (isBoundedMusic) {
                     int currentPlaybackPosition = newMusicService.getCurrentPlaybackPosition();
                     progressBarMusic.setProgress(currentPlaybackPosition);
                     seekBar.setProgress(currentPlaybackPosition);
@@ -299,7 +338,7 @@ public class MainActivity extends AppCompatActivity implements
                 if (Objects.equals(action, NewMusicService.ACTION_PLAY)) {
                     App.Log("On Action play");
                     Intent serviceIntent = new Intent(MainActivity.this, NewMusicService.class);
-                    bindService(serviceIntent, serviceConnection, 0);
+                    bindService(serviceIntent, serviceConnectionForMusic, 0);
                     BaseMusic music = intent.getParcelableExtra(NewMusicService.ARG_MUSIC);
                     setSongDescriptions(music);
                     setPauseButtons();
@@ -350,7 +389,7 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void changePlayingState() {
-        if (isBounded) {
+        if (isBoundedMusic) {
             if (newMusicService.isPlaying()) {
                 App.Log("change playing");
                 handler.post(musicPositionRunnable);
@@ -456,15 +495,15 @@ public class MainActivity extends AppCompatActivity implements
     protected void onResume() {
         super.onResume();
         Intent serviceIntent = new Intent(this, NewMusicService.class);
-        bindService(serviceIntent, serviceConnection, 0);
+        bindService(serviceIntent, serviceConnectionForMusic, 0);
     }
 
     @Override
     protected void onStop() {
         super.onStop();
-        if (!isBounded) return;
-        unbindService(serviceConnection);
-        isBounded = false;
+        if (!isBoundedMusic) return;
+        unbindService(serviceConnectionForMusic);
+        isBoundedMusic = false;
         handler.removeCallbacks(musicPositionRunnable);
     }
 
