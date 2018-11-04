@@ -161,18 +161,20 @@ public class MusicAdapter<T extends BaseMusic> extends RecyclerView.Adapter {
     }
 
     public void completeDownloadMusic(BaseMusic music) {
-        for (int i = 0; i < items.size(); i++) {
-            if (Objects.equals(items.get(i).getDownload(), music.getDownload())) {
-                items.get(i).setState(BaseMusic.STATE_COMPLETED);
-                items.get(i).setLocalPath(music.getLocalPath());
-                if (music instanceof VkMusic) {
-                    VkMusic vkMusic = (VkMusic) items.get(i);
-                    realm.beginTransaction();
-                    realm.copyToRealm(vkMusic);
-                    realm.commitTransaction();
+        if(mode == MODE_ALL_MUSIC) {
+            for (int i = 0; i < items.size(); i++) {
+                if (Objects.equals(items.get(i).getDownload(), music.getDownload())) {
+                    items.get(i).setState(BaseMusic.STATE_COMPLETED);
+                    items.get(i).setLocalPath(music.getLocalPath());
+                    notifyItemChanged(i);
                 }
-                notifyItemChanged(i);
             }
+        }else if (mode == MODE_CACHE){
+            T vkMusic = (T)music;
+            vkMusic.setState(BaseMusic.STATE_COMPLETED);
+            vkMusic.setLocalPath(music.getLocalPath());
+            items.add(0, vkMusic);
+            notifyItemInserted(0);
         }
     }
 

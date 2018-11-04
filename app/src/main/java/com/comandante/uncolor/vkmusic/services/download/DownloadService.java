@@ -10,6 +10,7 @@ import android.os.Environment;
 import android.os.IBinder;
 import android.support.annotation.Nullable;
 import android.support.v4.content.FileProvider;
+import android.support.v7.widget.RecyclerView;
 import android.widget.Toast;
 
 
@@ -17,6 +18,7 @@ import com.comandante.uncolor.vkmusic.Apis.Api;
 import com.comandante.uncolor.vkmusic.Apis.ApiResponse;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
+import com.comandante.uncolor.vkmusic.models.VkMusic;
 
 import java.io.BufferedInputStream;
 import java.io.File;
@@ -24,7 +26,9 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.util.Objects;
 
+import io.realm.Realm;
 import okhttp3.ResponseBody;
 
 
@@ -40,8 +44,11 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
 
     public static final String ARG_MUSIC = "music";
 
+    private Realm realm;
+
     public DownloadService() {
         super("Download Service");
+        realm = Realm.getDefaultInstance();
     }
 
     private BaseMusic music;
@@ -58,28 +65,28 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
         Bundle extras = intent.getExtras();
         if (extras != null) {
             music = extras.getParcelable("music");
-            if(music != null) {
-                  App.Log("download url: " + music.getDownload());
+            if (music != null) {
+                App.Log("download url: " + music.getDownload());
             }
         }
 
-        if(music == null){
+        if (music == null) {
             App.Log("music null");
             sendIntent(ACTION_DOWNLOAD_FAILURE);
             return;
         }
         String artist = "";
         String title = "";
-        if(music.getArtist() != null){
+        if (music.getArtist() != null) {
             artist = music.getArtist();
         }
 
-        if(music.getTitle() != null){
+        if (music.getTitle() != null) {
             title = music.getTitle();
         }
         File outputFile = new File(Environment
-                        .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                        artist + " - " + title + ".mp3");
+                .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
+                artist + " - " + title + ".mp3");
         String uriFromFile = Uri.fromFile(outputFile).toString();
         App.Log("Uri from file: " + uriFromFile);
         initDownload();
@@ -114,11 +121,11 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
         InputStream bis = new BufferedInputStream(body.byteStream(), 1024 * 8);
         String artist = "";
         String title = "";
-        if(music.getArtist() != null){
+        if (music.getArtist() != null) {
             artist = music.getArtist();
         }
 
-        if(music.getTitle() != null){
+        if (music.getTitle() != null) {
             title = music.getTitle();
         }
         File outputFile =
@@ -151,18 +158,28 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
         }
         App.Log("output path: " + outputFile.getAbsolutePath());
         music.setLocalPath(outputFile.getAbsolutePath());
+        music.setState(BaseMusic.STATE_COMPLETED);
+        saveToRealm();
         onDownloadComplete(ACTION_DOWNLOAD_COMPLETED);
         output.flush();
         output.close();
         bis.close();
         App.Log("download complete");
-
     }
 
     @Override
     public void onDestroy() {
         super.onDestroy();
         App.Log("onDestroy Download service");
+    }
+
+    public void saveToRealm(){
+        if (music instanceof VkMusic) {
+            VkMusic vkMusic = (VkMusic) music;
+            realm.beginTransaction();
+            realm.copyToRealm(vkMusic);
+            realm.commitTransaction();
+        }
     }
 
 
