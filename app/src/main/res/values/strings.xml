@@ -31,4 +31,5 @@
     <string name="log_download_track">Скачивание трека</string>
     <string name="log_play_track">Воспроизведение трека</string>
     <string name="log_logout">Выход из аккаунта</string>
+    <string name="msg_session_complete">Текущая сессия была завершена. \n Для продолжения использования поиска аудиозаписей вы можете переавторизоваться, не выходя из текущего аккаунта. \n Также вы можете продолжать прослушивать ваши сохраненные треки.</string>
 </resources>

@@ -5,12 +5,14 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.support.v4.app.Fragment;
+import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.EditText;
+import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.Toast;
@@ -19,6 +21,8 @@ import com.comandante.uncolor.vkmusic.Apis.request_bodies.GetVkMusicBody;
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.SearchVkMusicBody;
 import com.comandante.uncolor.vkmusic.Apis.response_models.CaptchaErrorResponse;
 import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
+import com.comandante.uncolor.vkmusic.utils.LoadingDialog;
+import com.comandante.uncolor.vkmusic.utils.MessageReporter;
 import com.comandante.uncolor.vkmusic.widgets.CaptchaDialog;
 import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.R;
@@ -29,6 +33,7 @@ import com.comandante.uncolor.vkmusic.models.VkMusic;
 import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
 import com.comandante.uncolor.vkmusic.music_adapter.OnLoadMoreListener;
 import com.comandante.uncolor.vkmusic.services.download.DownloadService;
+import com.comandante.uncolor.vkmusic.widgets.ResignInDialog;
 import com.flurry.android.FlurryAgent;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
@@ -72,6 +77,9 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
     @ViewById
     RadioButton radioButtonDownloadedMusic;
 
+    @ViewById
+    LinearLayout linearLayoutFailure;
+
     private MusicAdapter<VkMusic> musicAdapter;
 
     private VkMusicFragmentContract.Presenter presenter;
@@ -88,10 +96,17 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
 
     private CaptchaDialog captchaDialog;
 
+    private ResignInDialog resignInDialog;
+
+    private AlertDialog dialogProcessing;
+
     @AfterViews
     void init() {
         AdRequest adRequest = new AdRequest.Builder().build();
         adView.loadAd(adRequest);
+        resignInDialog = new ResignInDialog(getContext());
+        resignInDialog.setOnSignInClickListener(getSignInClickListener());
+        dialogProcessing = LoadingDialog.newInstanceWithoutCancelable(getContext(), LoadingDialog.LABEL_LOADING);
         realm = Realm.getDefaultInstance();
         radioButtonAllMusic.setChecked(true);
         getVkMusicBody = new GetVkMusicBody();
@@ -112,6 +127,32 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
         editTextSearch.addTextChangedListener(getTempTextWatcher());
         searchRunnable = getSearchRunnable();
         presenter.onLoadMusic(getVkMusicBody, true);
+    }
+
+    private View.OnClickListener getSignInClickListener() {
+        return new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                presenter.onSignInButtonClick(resignInDialog.getLogin(),
+                        resignInDialog.getPassword());
+            }
+        };
+    }
+
+    @Override
+    public void showProcess() {
+        dialogProcessing.show();
+    }
+
+    @Override
+    public void hideProcess() {
+        dialogProcessing.dismiss();
+    }
+
+    @Override
+    public void showErrorMessage() {
+        FlurryAgent.logEvent(getContext().getString(R.string.log_auth_failed));
+        MessageReporter.showMessage(getContext(), "Ошибка", "Ошибка при авторизации");
     }
 
     private Runnable getSearchRunnable() {
@@ -181,6 +222,7 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
             musicAdapter.setMode(MusicAdapter.MODE_ALL_MUSIC);
             musicAdapter.clear();
             getVkMusicBody = new GetVkMusicBody();
+            hideFailureMessage();
             presenter.onLoadMusic(getVkMusicBody, true);
         }
     }
@@ -188,6 +230,7 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
     @Click(R.id.radioButtonDownloadedMusic)
     void onDownloadedMusicTabClick() {
         if (musicAdapter.getMode() != MusicAdapter.MODE_CACHE) {
+            hideFailureMessage();
             editTextSearch.getText().clear();
             realm.beginTransaction();
             RealmResults<VkMusic> results = realm.where(VkMusic.class).findAll();
@@ -198,6 +241,11 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
                 realm.commitTransaction();
             }
         }
+    }
+
+    @Click(R.id.buttonResignIn)
+    void onResignInButtonClick(){
+        resignInDialog.show();
     }
 
     private BroadcastReceiver getMusicReceiver() {
@@ -253,6 +301,27 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
     @Override
     public void removeLoadMoreProgress() {
         musicAdapter.removeLoadingItem();
+    }
+
+    @Override
+    public void showFailureMessage() {
+        linearLayoutFailure.setVisibility(View.VISIBLE);
+    }
+
+    @Override
+    public void hideFailureMessage() {
+        linearLayoutFailure.setVisibility(View.GONE);
+        resignInDialog.clear();
+    }
+
+    @Override
+    public void showReSignInDialog() {
+        resignInDialog.show();
+    }
+
+    @Override
+    public void hideReSignInDialog() {
+        resignInDialog.dismiss();
     }
 
     @Override

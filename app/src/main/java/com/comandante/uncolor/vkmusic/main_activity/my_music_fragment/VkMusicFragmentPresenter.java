@@ -3,23 +3,22 @@ package com.comandante.uncolor.vkmusic.main_activity.my_music_fragment;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.content.ServiceConnection;
+import android.widget.Toast;
 
 import com.comandante.uncolor.vkmusic.Apis.Api;
 import com.comandante.uncolor.vkmusic.Apis.ApiResponse;
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.GetVkMusicBody;
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.SearchVkMusicBody;
+import com.comandante.uncolor.vkmusic.Apis.response_models.AuthResponseModel;
+import com.comandante.uncolor.vkmusic.Apis.response_models.VKMusicResponseModel;
 import com.comandante.uncolor.vkmusic.Apis.response_models.album_image_model.AlbumImageResponseModel;
 import com.comandante.uncolor.vkmusic.Apis.response_models.album_image_model.ImageInfo;
-import com.comandante.uncolor.vkmusic.Apis.response_models.VKMusicResponseModel;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.application.AppPermissionManager;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.models.VkMusic;
 import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
 import com.comandante.uncolor.vkmusic.services.download.DownloadService;
-
-import com.comandante.uncolor.vkmusic.services.download.NewDownloadService;
 import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 
 import java.io.IOException;
@@ -73,7 +72,7 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
         App.Log("Search offset: " + searchVkMusicBody.getOffset());
         if (App.isAuth()) {
             view.showProgress();
-            switch (mode){
+            switch (mode) {
                 case MusicAdapter.MODE_CACHE:
                     RealmResults<VkMusic> results = realm.where(VkMusic.class)
                             .beginGroup()
@@ -114,6 +113,35 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
     }
 
     @Override
+    public void onSignInButtonClick(String login, String password) {
+        view.showProcess();
+        Api.getSource().login(login, password).enqueue(ApiResponse.getCallback(getAuthCallback(),
+                this));
+    }
+
+    private void rememberAuth(String token) {
+        App.saveToken(token);
+    }
+
+    private ApiResponse.ApiResponseListener<AuthResponseModel> getAuthCallback() {
+        return new ApiResponse.ApiResponseListener<AuthResponseModel>() {
+            @Override
+            public void onResponse(AuthResponseModel result) {
+                view.hideProcess();
+                if(result.getToken() == null){
+                    view.showErrorMessage();
+                }
+                else {
+                    rememberAuth(result.getToken());
+                    view.hideReSignInDialog();
+                    view.hideFailureMessage();
+                    onLoadMusic(new GetVkMusicBody(), true);
+                }
+            }
+        };
+    }
+
+    @Override
     public void onFindAlbumImageUrl(BaseMusic music, int position) {
         Api.getSource().getAlbumImage(music.getArtist(), music.getTitle())
                 .enqueue(ApiResponse.getCallback(getFindAlbumImageCallback(position), this));
@@ -123,10 +151,10 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
         return new ApiResponse.ApiResponseListener<AlbumImageResponseModel>() {
             @Override
             public void onResponse(AlbumImageResponseModel result) throws IOException {
-                if(result.getTrack() == null){
+                if (result.getTrack() == null) {
                     return;
                 }
-                if(result.getTrack().getAlbum() != null) {
+                if (result.getTrack().getAlbum() != null) {
                     List<ImageInfo> images = result.getTrack().getAlbum().getImages();
                     for (int i = 0; i < images.size(); i++) {
                         if (Objects.equals(images.get(i).getSize(), "extralarge")) {
@@ -147,7 +175,15 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
                     App.Log("search not null");
                     view.setMusicItems(result.getResponse().getItems(), isRefreshing);
                 } else if (result.getError() != null) {
-                    view.showCaptchaDialog(result.getError(), isRefreshing);
+                    switch (result.getError().getErrorCode()) {
+                        case 5:
+                            view.showFailureMessage();
+                            break;
+                        case 14:
+                            view.showCaptchaDialog(result.getError(), isRefreshing);
+
+                    }
+
                 }
                 view.hideProgress();
                 view.removeLoadMoreProgress();
@@ -161,7 +197,17 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
             public void onResponse(VKMusicResponseModel result) throws IOException {
                 view.hideProgress();
                 view.removeLoadMoreProgress();
-                view.setMusicItems(result.getResponse().getItems(), isRefreshing);
+                if (result.getError() != null) {
+                    switch (result.getError().getErrorCode()) {
+                        case 5:
+                            view.showFailureMessage();
+                            break;
+
+                    }
+                }
+                if (result.getResponse() != null) {
+                    view.setMusicItems(result.getResponse().getItems(), isRefreshing);
+                }
             }
         };
     }

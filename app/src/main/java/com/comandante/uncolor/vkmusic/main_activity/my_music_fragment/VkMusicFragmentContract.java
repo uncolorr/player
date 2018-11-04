@@ -22,6 +22,10 @@ public interface VkMusicFragmentContract {
         void hideProgress();
         void addLoadMoreProgress();
         void removeLoadMoreProgress();
+        void showFailureMessage();
+        void hideFailureMessage();
+        void showReSignInDialog();
+        void hideReSignInDialog();
         void setMusicItems(List<VkMusic> items, boolean isRefreshing);
         void deleteMusic(VkMusic music, int position);
         void showErrorToast(String message);
@@ -29,11 +33,15 @@ public interface VkMusicFragmentContract {
         void setAlbumImageForMusic(String url, int position);
         ArrayList<VkMusic> getMusic();
         Activity getViewActivity();
+        void hideProcess();
+        void showErrorMessage();
+        void showProcess();
     }
 
     interface Presenter extends BaseMusicFragmentPresenter{
         void onLoadMusic(GetVkMusicBody requestBody, boolean isRefreshing);
         void onSearchMusic(SearchVkMusicBody requestBody, int mode, boolean withCaptcha, boolean isRefreshing);
+        void onSignInButtonClick(String login, String password);
 
     }
 }
