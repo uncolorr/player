@@ -1,5 +1,7 @@
 package com.comandante.uncolor.vkmusic.Apis.response_models;
 
+import android.support.annotation.Nullable;
+
 import com.google.gson.annotations.SerializedName;
 
 import java.io.Serializable;
@@ -13,12 +15,15 @@ public class CaptchaErrorResponse implements Serializable{
     @SerializedName("error_code")
     private int errorCode;
 
+    @Nullable
     @SerializedName("error_msg")
     private String errorMessage;
 
+    @Nullable
     @SerializedName("captcha_sid")
     private String captchaSID;
 
+    @Nullable
     @SerializedName("captcha_img")
     private String captchaImage;
 
