@@ -34,6 +34,7 @@ import com.comandante.uncolor.vkmusic.utils.DurationConverter;
 import com.comandante.uncolor.vkmusic.widgets.SquareImageView;
 import com.comandante.uncolor.vkmusic.widgets.StaticViewPager;
 import com.github.lzyzsd.circleprogress.DonutProgress;
+import com.makeramen.roundedimageview.RoundedImageView;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
@@ -63,7 +64,7 @@ public class MainActivity extends AppCompatActivity implements
     SquareImageView imageViewMusicPlate;
 
     @ViewById
-    SquareImageView imageViewPanelAlbum;
+    RoundedImageView imageViewPanelAlbum;
 
     @ViewById
     TextView textViewPanelArtist;

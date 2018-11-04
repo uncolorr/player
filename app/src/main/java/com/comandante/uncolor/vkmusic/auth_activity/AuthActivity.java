@@ -29,6 +29,7 @@ import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.utils.DurationConverter;
 import com.comandante.uncolor.vkmusic.widgets.SquareImageView;
 import com.comandante.uncolor.vkmusic.widgets.StaticViewPager;
+import com.makeramen.roundedimageview.RoundedImageView;
 
 import org.androidannotations.annotations.AfterViews;
 import org.androidannotations.annotations.Click;
@@ -57,7 +58,7 @@ public class AuthActivity extends AppCompatActivity implements
     SquareImageView imageViewMusicPlate;
 
     @ViewById
-    SquareImageView imageViewPanelAlbum;
+    RoundedImageView imageViewPanelAlbum;
 
     @ViewById
     TextView textViewPanelArtist;

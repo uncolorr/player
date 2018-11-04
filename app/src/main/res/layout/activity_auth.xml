@@ -46,12 +46,13 @@
             android:orientation="horizontal">
 
 
-            <com.comandante.uncolor.vkmusic.widgets.SquareImageView
+            <com.makeramen.roundedimageview.RoundedImageView
                 android:id="@+id/imageViewPanelAlbum"
                 android:layout_width="48dp"
                 android:layout_height="48dp"
                 android:layout_gravity="center"
                 android:layout_marginStart="8dp"
+                app:riv_corner_radius="4dp"
                 android:src="@drawable/album_default" />
 
             <LinearLayout
