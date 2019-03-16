@@ -4,13 +4,18 @@ import android.app.Activity;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.LinearLayout;
 import android.widget.ProgressBar;
@@ -20,11 +25,6 @@ import android.widget.Toast;
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.GetVkMusicBody;
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.SearchVkMusicBody;
 import com.comandante.uncolor.vkmusic.Apis.response_models.CaptchaErrorResponse;
-import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
-import com.comandante.uncolor.vkmusic.utils.LoadingDialog;
-import com.comandante.uncolor.vkmusic.utils.MessageReporter;
-import com.comandante.uncolor.vkmusic.widgets.CaptchaDialog;
-import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.main_activity.settings_fragment.SettingsFragment;
@@ -33,15 +33,15 @@ import com.comandante.uncolor.vkmusic.models.VkMusic;
 import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
 import com.comandante.uncolor.vkmusic.music_adapter.OnLoadMoreListener;
 import com.comandante.uncolor.vkmusic.services.download.DownloadService;
+import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
+import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
+import com.comandante.uncolor.vkmusic.utils.LoadingDialog;
+import com.comandante.uncolor.vkmusic.utils.MessageReporter;
+import com.comandante.uncolor.vkmusic.widgets.CaptchaDialog;
 import com.comandante.uncolor.vkmusic.widgets.ResignInDialog;
 import com.flurry.android.FlurryAgent;
 import com.google.android.gms.ads.AdRequest;
 import com.google.android.gms.ads.AdView;
-
-import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.Click;
-import org.androidannotations.annotations.EFragment;
-import org.androidannotations.annotations.ViewById;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -49,6 +49,9 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
 import io.realm.Realm;
 import io.realm.RealmResults;
 
@@ -56,28 +59,27 @@ import io.realm.RealmResults;
  * Created by Uncolor on 24.08.2018.
  */
 
-@EFragment(R.layout.fragment_my_music)
 public class VkMusicFragment extends Fragment implements VkMusicFragmentContract.View {
 
-    @ViewById
+    @BindView(R.id.adView)
     AdView adView;
 
-    @ViewById
+    @BindView(R.id.recyclerViewMusic)
     RecyclerView recyclerViewMusic;
 
-    @ViewById
+    @BindView(R.id.progressBar)
     ProgressBar progressBar;
 
-    @ViewById
+    @BindView(R.id.editTextSearch)
     EditText editTextSearch;
 
-    @ViewById
+    @BindView(R.id.radioButtonAllMusic)
     RadioButton radioButtonAllMusic;
 
-    @ViewById
+    @BindView(R.id.radioButtonDownloadedMusic)
     RadioButton radioButtonDownloadedMusic;
 
-    @ViewById
+    @BindView(R.id.linearLayoutFailure)
     LinearLayout linearLayoutFailure;
 
     private MusicAdapter<VkMusic> musicAdapter;
@@ -100,8 +102,28 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
 
     private AlertDialog dialogProcessing;
 
-    @AfterViews
-    void init() {
+    public static VkMusicFragment newInstance() {
+
+        Bundle args = new Bundle();
+
+        VkMusicFragment fragment = new VkMusicFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_my_music, container, false);
+        ButterKnife.bind(this, view);
+        init();
+        return view;
+
+    }
+
+    private void init() {
         AdRequest adRequest = new AdRequest.Builder().build();
         adView.loadAd(adRequest);
         resignInDialog = new ResignInDialog(getContext());
@@ -215,7 +237,7 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
     }
 
 
-    @Click(R.id.radioButtonAllMusic)
+    @OnClick(R.id.radioButtonAllMusic)
     void onAllMusicTabClick() {
         if (musicAdapter.getMode() != MusicAdapter.MODE_ALL_MUSIC) {
             editTextSearch.getText().clear();
@@ -227,7 +249,7 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
         }
     }
 
-    @Click(R.id.radioButtonDownloadedMusic)
+    @OnClick(R.id.radioButtonDownloadedMusic)
     void onDownloadedMusicTabClick() {
         if (musicAdapter.getMode() != MusicAdapter.MODE_CACHE) {
             hideFailureMessage();
@@ -243,7 +265,7 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
         }
     }
 
-    @Click(R.id.buttonResignIn)
+    @OnClick(R.id.buttonResignIn)
     void onResignInButtonClick(){
         resignInDialog.show();
     }

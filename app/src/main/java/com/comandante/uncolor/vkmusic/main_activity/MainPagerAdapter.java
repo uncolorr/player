@@ -4,9 +4,8 @@ import android.support.v4.app.Fragment;
 import android.support.v4.app.FragmentManager;
 import android.support.v4.app.FragmentPagerAdapter;
 
-import com.comandante.uncolor.vkmusic.main_activity.my_music_fragment.VkMusicFragment_;
-import com.comandante.uncolor.vkmusic.main_activity.playlists_fragment.PlaylistsFragment_;
-import com.comandante.uncolor.vkmusic.main_activity.settings_fragment.SettingsFragment_;
+import com.comandante.uncolor.vkmusic.main_activity.my_music_fragment.VkMusicFragment;
+import com.comandante.uncolor.vkmusic.main_activity.settings_fragment.SettingsFragment;
 
 
 /**
@@ -25,9 +24,9 @@ public class MainPagerAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         switch (position) {
             case 0:
-                return VkMusicFragment_.builder().build();
+                return VkMusicFragment.newInstance();
             case 1:
-                return SettingsFragment_.builder().build();
+                return SettingsFragment.newInstance();
         }
         return null;
     }

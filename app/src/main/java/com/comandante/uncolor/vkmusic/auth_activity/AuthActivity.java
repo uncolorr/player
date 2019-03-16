@@ -5,9 +5,11 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.ServiceConnection;
+import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.design.widget.BottomNavigationView;
 import android.support.design.widget.BottomSheetBehavior;
 import android.support.v7.app.AppCompatActivity;
@@ -20,80 +22,79 @@ import android.widget.SeekBar;
 import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
-import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
-import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.main_activity.MainActivity;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
+import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 import com.comandante.uncolor.vkmusic.utils.DurationConverter;
+import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.widgets.SquareImageView;
 import com.comandante.uncolor.vkmusic.widgets.StaticViewPager;
 import com.makeramen.roundedimageview.RoundedImageView;
 
-import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.Click;
-import org.androidannotations.annotations.EActivity;
-import org.androidannotations.annotations.ViewById;
-
 import java.util.Objects;
 
-@EActivity(R.layout.activity_auth)
+import butterknife.BindView;
+import butterknife.ButterKnife;
+import butterknife.OnClick;
+
+
 public class AuthActivity extends AppCompatActivity implements
         BottomNavigationView.OnNavigationItemSelectedListener, SeekBar.OnSeekBarChangeListener{
 
-    @ViewById
+    @BindView(R.id.viewPager)
     StaticViewPager viewPager;
 
-    @ViewById
+    @BindView(R.id.bottomNavigationView)
     BottomNavigationView bottomNavigationView;
 
-    @ViewById
+    @BindView(R.id.bigPlayerPanel)
     LinearLayout bigPlayerPanel;
 
-    @ViewById
+    @BindView(R.id.playerPanel)
     LinearLayout playerPanel;
 
-    @ViewById
+    @BindView(R.id.imageViewMusicPlate)
     SquareImageView imageViewMusicPlate;
 
-    @ViewById
+    @BindView(R.id.imageViewPanelAlbum)
     RoundedImageView imageViewPanelAlbum;
 
-    @ViewById
+    @BindView(R.id.textViewPanelArtist)
     TextView textViewPanelArtist;
 
-    @ViewById
+    @BindView(R.id.textViewPanelSongTitle)
     TextView textViewPanelSongTitle;
 
-    @ViewById
+    @BindView(R.id.textViewPlayerArtist)
     TextView textViewPlayerArtist;
 
-    @ViewById
+    @BindView(R.id.textViewPlayerSongTitle)
     TextView textViewPlayerSongTitle;
 
-    @ViewById
+    @BindView(R.id.imageButtonPanelPlay)
     ImageButton imageButtonPanelPlay;
 
-    @ViewById
+    @BindView(R.id.imageButtonPlayerPlay)
     ImageButton imageButtonPlayerPlay;
 
-    @ViewById
+    @BindView(R.id.imageButtonShuffle)
     ImageButton imageButtonShuffle;
 
-    @ViewById
+    @BindView(R.id.imageButtonRepeat)
     ImageButton imageButtonRepeat;
 
-    @ViewById
+    @BindView(R.id.textViewDuration)
     TextView textViewDuration;
 
-    @ViewById
+    @BindView(R.id.textViewCurrentPosition)
     TextView textViewCurrentPosition;
 
-    @ViewById
+    @BindView(R.id.seekBar)
     SeekBar seekBar;
 
-    @ViewById
+    @BindView(R.id.progressBarMusic)
     ProgressBar progressBarMusic;
 
     private ServiceConnection serviceConnection;
@@ -116,11 +117,18 @@ public class AuthActivity extends AppCompatActivity implements
 
 
     public static Intent getInstance(Context context){
-        return new Intent(context, AuthActivity_.class);
+        return new Intent(context, AuthActivity.class);
     }
 
-    @AfterViews
-    void init(){
+    @Override
+    protected void onCreate(@Nullable Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.activity_auth);
+        ButterKnife.bind(this);
+        init();
+    }
+
+    private void init(){
         if(App.isAuth()){
             startActivity(MainActivity.getInstance(this));
             finish();
@@ -157,17 +165,17 @@ public class AuthActivity extends AppCompatActivity implements
         };
     }
 
-    @Click(R.id.playerPanel)
+    @OnClick(R.id.playerPanel)
     void onPlayerPanelClick() {
         showPlayer();
     }
 
-    @Click(R.id.imageButtonHide)
+    @OnClick(R.id.imageButtonHide)
     void onImageButtonHideClick() {
         hidePlayer();
     }
 
-    @Click({R.id.imageButtonPanelPlay, R.id.imageButtonPlayerPlay})
+    @OnClick({R.id.imageButtonPanelPlay, R.id.imageButtonPlayerPlay})
     void onPlayButtonClick() {
         if(isBounded){
             if(newMusicService.isPlaying()){
@@ -196,7 +204,7 @@ public class AuthActivity extends AppCompatActivity implements
         }
     }
 
-    @Click({R.id.imageButtonPanelNext, R.id.imageButtonPlayerNext})
+    @OnClick({R.id.imageButtonPanelNext, R.id.imageButtonPlayerNext})
     void onNextButtonClick() {
         if(isBounded) {
             BaseMusic music = newMusicService.next(true);
@@ -210,7 +218,7 @@ public class AuthActivity extends AppCompatActivity implements
         }
     }
 
-    @Click(R.id.imageButtonPlayerPrevious)
+    @OnClick(R.id.imageButtonPlayerPrevious)
     void onPreviousButtonClick() {
         if(isBounded) {
             BaseMusic music = newMusicService.previous();

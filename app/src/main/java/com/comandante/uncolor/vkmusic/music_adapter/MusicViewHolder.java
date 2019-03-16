@@ -12,6 +12,7 @@ import android.widget.TextView;
 import com.bumptech.glide.Glide;
 import com.comandante.uncolor.vkmusic.Apis.ApiResponse;
 import com.comandante.uncolor.vkmusic.R;
+import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.auth_activity.music_fragment.BaseMusicFragmentPresenter;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.utils.DurationConverter;
@@ -63,7 +64,7 @@ public class MusicViewHolder extends RecyclerView.ViewHolder implements ApiRespo
             presenter.onFindAlbumImageUrl(this.music, getAdapterPosition());
         }
         else {
-            Glide.with(itemView.getContext())
+            Glide.with(App.getContext())
                     .load(this.music.getAlbumImageUrl())
                     .into(imageViewAlbum);
         }

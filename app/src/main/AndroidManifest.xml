@@ -27,7 +27,7 @@
             />
 
         <activity
-            android:name="com.comandante.uncolor.vkmusic.main_activity.MainActivity_"
+            android:name="com.comandante.uncolor.vkmusic.main_activity.MainActivity"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden|adjustPan">
         </activity>
@@ -61,7 +61,7 @@
 
 
         <activity
-            android:name="com.comandante.uncolor.vkmusic.auth_activity.AuthActivity_"
+            android:name="com.comandante.uncolor.vkmusic.auth_activity.AuthActivity"
             android:theme="@style/AuthActivityTheme"
             android:screenOrientation="portrait"
             android:windowSoftInputMode="stateAlwaysHidden|adjustResize">

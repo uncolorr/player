@@ -1,19 +1,16 @@
 package com.comandante.uncolor.vkmusic.services.music;
 
 import android.app.Notification;
-import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
-import android.os.Build;
 import android.support.v4.app.NotificationCompat;
 import android.widget.RemoteViews;
 
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.auth_activity.AuthActivity;
-import com.comandante.uncolor.vkmusic.auth_activity.AuthActivity_;
-import com.comandante.uncolor.vkmusic.main_activity.MainActivity_;
+import com.comandante.uncolor.vkmusic.main_activity.MainActivity;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 
 /**
@@ -22,10 +19,10 @@ import com.comandante.uncolor.vkmusic.models.BaseMusic;
 
 public class MediaPlayerNotification {
 
-    public static final int NOTIFICATION_ID = 564646;
+    public static final int NOTIFICATION_ID = 5646466;
 
-    public static final String NOTIFICATION_CHANNEL_ID = "453524342";
-    public static final String NOTIFICATION_CHANNEL_NAME = "com.comandante.uncolor.vkmusic";
+    public static final String NOTIFICATION_CHANNEL_ID = "4535243424";
+    public static final String NOTIFICATION_CHANNEL_NAME = "com.comandante.uncolor.vmusic";
 
     private Context context;
 
@@ -105,10 +102,10 @@ public class MediaPlayerNotification {
     private PendingIntent createContentPendingIntent() {
         Class clazz;
         if(App.isAuth()){
-            clazz = MainActivity_.class;
+            clazz = MainActivity.class;
         }
         else {
-            clazz = AuthActivity_.class;
+            clazz = AuthActivity.class;
         }
         Intent notificationIntent = new Intent(context, clazz);
         notificationIntent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK

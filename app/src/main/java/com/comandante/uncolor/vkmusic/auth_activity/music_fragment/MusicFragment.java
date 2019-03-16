@@ -3,29 +3,30 @@ package com.comandante.uncolor.vkmusic.auth_activity.music_fragment;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
+import android.os.Bundle;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.v4.app.Fragment;
 import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
+import android.view.LayoutInflater;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.EditText;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.GetMusicRequestBody;
-import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
-import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.models.Music;
 import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
+import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
+import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.flurry.android.FlurryAgent;
-
-import org.androidannotations.annotations.AfterViews;
-import org.androidannotations.annotations.EFragment;
-import org.androidannotations.annotations.ViewById;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -33,20 +34,23 @@ import java.util.Objects;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import butterknife.BindView;
+import butterknife.ButterKnife;
+
 /**
  * Created by Uncolor on 04.09.2018.
  */
 
-@EFragment(R.layout.fragment_music)
+
 public class MusicFragment extends Fragment implements MusicFragmentContract.View {
 
-    @ViewById
+    @BindView(R.id.progressBar)
     ProgressBar progressBar;
 
-    @ViewById
+    @BindView(R.id.recyclerViewMusic)
     RecyclerView recyclerViewMusic;
 
-    @ViewById
+    @BindView(R.id.editTextSearch)
     EditText editTextSearch;
 
 
@@ -61,8 +65,28 @@ public class MusicFragment extends Fragment implements MusicFragmentContract.Vie
 
     private Runnable searchRunnable;
 
-    @AfterViews
-    void init() {
+    public static MusicFragment newInstance() {
+
+        Bundle args = new Bundle();
+
+        MusicFragment fragment = new MusicFragment();
+        fragment.setArguments(args);
+        return fragment;
+    }
+
+
+    @Nullable
+    @Override
+    public View onCreateView(@NonNull LayoutInflater inflater, @Nullable ViewGroup container,
+                             @Nullable Bundle savedInstanceState) {
+        View view = inflater.inflate(R.layout.fragment_music, container, false);
+        ButterKnife.bind(this, view);
+        init();
+        return view;
+
+    }
+
+    private void init() {
         getMusicRequestBody = new GetMusicRequestBody();
         presenter = new MusicFragmentPresenter(getContext(), this);
         musicAdapter = new MusicAdapter<>(presenter);
@@ -73,7 +97,7 @@ public class MusicFragment extends Fragment implements MusicFragmentContract.Vie
         musicReceiver = getMusicReceiver();
         searchRunnable = getSearchRunnable();
         editTextSearch.addTextChangedListener(getSearchTextWatcher());
-        getContext().registerReceiver(musicReceiver, IntentFilterManager.getMusicIntentFilter());
+        App.getContext().registerReceiver(musicReceiver, IntentFilterManager.getMusicIntentFilter());
     }
 
     private BroadcastReceiver getMusicReceiver() {
@@ -160,7 +184,7 @@ public class MusicFragment extends Fragment implements MusicFragmentContract.Vie
     @Override
     public void onDestroy() {
         super.onDestroy();
-        getContext().unregisterReceiver(musicReceiver);
+      App.getContext().unregisterReceiver(musicReceiver);
     }
 
     @Override
