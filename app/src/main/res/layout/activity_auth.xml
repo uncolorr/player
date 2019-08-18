@@ -1,6 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.coordinatorlayout.widget.CoordinatorLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -10,122 +9,14 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:orientation="vertical">
+        android:orientation="vertical"/>
 
         <com.comandante.uncolor.vkmusic.widgets.StaticViewPager
             android:id="@+id/viewPager"
             android:layout_width="match_parent"
-            android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_height="match_parent">
 
         </com.comandante.uncolor.vkmusic.widgets.StaticViewPager>
-
-
-        <ProgressBar
-            android:id="@+id/progressBarMusic"
-            style="?android:attr/progressBarStyleHorizontal"
-            android:layout_width="match_parent"
-            android:visibility="gone"
-            android:layout_height="4dp"
-            android:theme="@style/ProgressBarStyle" />
-
-
-        <View
-            android:layout_width="match_parent"
-            android:layout_height="1px"
-            android:background="#d8d8d8">
-
-        </View>
-
-        <LinearLayout
-            android:id="@+id/playerPanel"
-            android:layout_width="match_parent"
-            android:layout_height="56dp"
-            android:visibility="gone"
-            android:background="@android:color/white"
-            android:orientation="horizontal">
-
-
-            <com.makeramen.roundedimageview.RoundedImageView
-                android:id="@+id/imageViewPanelAlbum"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="center"
-                android:layout_marginStart="8dp"
-                app:riv_corner_radius="4dp"
-                android:src="@drawable/album_default" />
-
-            <LinearLayout
-                android:id="@+id/linearLayout"
-                android:layout_width="0dp"
-                android:layout_height="match_parent"
-                android:layout_marginEnd="8dp"
-                android:layout_marginStart="8dp"
-                android:layout_weight="1"
-                android:gravity="center_vertical"
-                android:orientation="vertical">
-
-                <TextView
-                    android:id="@+id/textViewPanelSongTitle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginBottom="4dp"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginStart="8dp"
-                    android:singleLine="true"
-                    android:text="-"
-                    android:textColor="@android:color/black"
-                    android:textSize="18sp" />
-
-                <TextView
-                    android:id="@+id/textViewPanelArtist"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginEnd="8dp"
-                    android:layout_marginStart="8dp"
-                    android:singleLine="true"
-                    android:text="-"
-                    android:textColor="@color/colorMain" />
-
-            </LinearLayout>
-
-            <ImageButton
-                android:id="@+id/imageButtonPanelPlay"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_gravity="center"
-                android:layout_marginEnd="8dp"
-                android:background="@android:color/transparent"
-                android:padding="2dp"
-                android:scaleType="centerCrop"
-                android:src="@drawable/play"
-                android:tint="@color/colorMain" />
-
-            <ImageButton
-                android:id="@+id/imageButtonPanelNext"
-                android:layout_width="32dp"
-                android:layout_height="32dp"
-                android:layout_gravity="center"
-                android:layout_marginEnd="16dp"
-                android:background="@android:color/transparent"
-                android:scaleType="centerCrop"
-                android:src="@drawable/next"
-                android:tint="@color/colorMain" />
-
-
-        </LinearLayout>
-
-        <com.google.android.material.bottomnavigation.BottomNavigationView
-            android:id="@+id/bottomNavigationView"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            app:menu="@menu/menu_auth_navigation">
-
-        </com.google.android.material.bottomnavigation.BottomNavigationView>
-
-    </LinearLayout>
-
-    <include layout="@layout/bottom_sheet_player_panel" />
 
 
 </androidx.coordinatorlayout.widget.CoordinatorLayout>

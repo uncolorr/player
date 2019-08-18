@@ -5,7 +5,6 @@ import androidx.fragment.app.FragmentManager;
 import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.comandante.uncolor.vkmusic.auth_activity.auth_fragment.AuthFragment;
-import com.comandante.uncolor.vkmusic.auth_activity.music_fragment.MusicFragment;
 
 
 /**
@@ -14,7 +13,7 @@ import com.comandante.uncolor.vkmusic.auth_activity.music_fragment.MusicFragment
 
 public class AuthFragmentPagerAdapter extends FragmentPagerAdapter {
 
-    private static final int PAGES_COUNT = 2;
+    private static final int PAGES_COUNT = 1;
 
     public AuthFragmentPagerAdapter(FragmentManager fm) {
         super(fm);
@@ -24,8 +23,6 @@ public class AuthFragmentPagerAdapter extends FragmentPagerAdapter {
     public Fragment getItem(int position) {
         switch (position){
             case 0:
-                return MusicFragment.newInstance();
-            case 1:
                 return AuthFragment.newInstance();
         }
         return null;

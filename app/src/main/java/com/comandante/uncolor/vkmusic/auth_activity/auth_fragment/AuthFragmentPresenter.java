@@ -4,12 +4,10 @@ import android.content.Context;
 
 import com.comandante.uncolor.vkmusic.Apis.Api;
 import com.comandante.uncolor.vkmusic.Apis.ApiResponse;
+import com.comandante.uncolor.vkmusic.Apis.response_models.ResponseStatus;
 import com.comandante.uncolor.vkmusic.Apis.response_models.AuthResponseModel;
+import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.AppSettings;
-
-/**
- * Created by Uncolor on 04.09.2018.
- */
 
 public class AuthFragmentPresenter implements AuthFragmentContract.Presenter, ApiResponse.ApiFailureListener {
 
@@ -21,11 +19,12 @@ public class AuthFragmentPresenter implements AuthFragmentContract.Presenter, Ap
         this.view = view;
     }
 
+
     @Override
     public void onSignInButtonClick(String login, String password) {
-        view.showProcess();
-        Api.getSource().login(login, password).enqueue(ApiResponse.getCallback(getAuthCallback(),
-                this));
+        view.showLoadingDialog();
+        Api.getSource().login(login, password)
+                .enqueue(ApiResponse.getCallback(getLoginResponseListener(), this));
     }
 
     @Override
@@ -33,29 +32,52 @@ public class AuthFragmentPresenter implements AuthFragmentContract.Presenter, Ap
         return AppSettings.isAuth();
     }
 
-    private void rememberAuth(String token) {
-        AppSettings.saveToken(token);
+    private ApiResponse.ApiResponseListener<AuthResponseModel> getLoginResponseListener() {
+        return result -> {
+            view.hideLoadingDialog();
+            if(result == null){
+                onFailure(500, context.getString(R.string.err_unknown_err));
+                return;
+            }
+
+            processErrorIfNeeded(result);
+
+            if(result.getToken() == null) {
+                onFailure(500, context.getString(R.string.err_unknown_err));
+                return;
+            }
+
+            String token = result.getToken();
+            AppSettings.signIn(token);
+            view.signIn();
+        };
+    }
+
+    private void processErrorIfNeeded(AuthResponseModel result){
+        if(result.getError() == null){
+            return;
+        }
+        String error = result.getError();
+        switch (error){
+            case ResponseStatus.ERROR_INVALID_CLIENT:
+                view.showErrorMessage(context.getString(R.string.err_incorrect_login_or_pass));
+                break;
+            case ResponseStatus.ERROR_NEED_CAPTCHA:
+                view.showCaptchaDialog(result.getCaptchaSid(), result.getCaptchaImg());
+                break;
+        }
+    }
+
+    @Override
+    public void onSignInWithCaptchaButtonClick(String login, String password, String cSid, String cKey) {
+        view.showLoadingDialog();
+        Api.getSource().loginWithCaptcha(login, password, cSid, cKey)
+                .enqueue(ApiResponse.getCallback(getLoginResponseListener(), this));
     }
 
     @Override
     public void onFailure(int code, String message) {
-        view.hideProcess();
-    }
-
-
-    private ApiResponse.ApiResponseListener<AuthResponseModel> getAuthCallback() {
-        return new ApiResponse.ApiResponseListener<AuthResponseModel>() {
-            @Override
-            public void onResponse(AuthResponseModel result) {
-                view.hideProcess();
-                if(result.getToken() == null){
-                    view.showErrorMessage();
-                }
-                else {
-                    rememberAuth(result.getToken());
-                    view.login();
-                }
-            }
-        };
+        view.hideLoadingDialog();
+        view.showErrorMessage(message);
     }
 }
