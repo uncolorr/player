@@ -1,11 +1,11 @@
 package com.comandante.uncolor.vkmusic.Apis;
 
 
-import com.comandante.uncolor.vkmusic.Apis.response_models.user_info_model.UserInfoResponseModel;
-import com.comandante.uncolor.vkmusic.Apis.response_models.album_image_model.AlbumImageResponseModel;
-import com.comandante.uncolor.vkmusic.Apis.response_models.AuthResponseModel;
 import com.comandante.uncolor.vkmusic.Apis.response_models.MusicListResponseModel;
+import com.comandante.uncolor.vkmusic.Apis.response_models.AuthResponseModel;
 import com.comandante.uncolor.vkmusic.Apis.response_models.VKMusicResponseModel;
+import com.comandante.uncolor.vkmusic.Apis.response_models.album_image_model.AlbumImageResponseModel;
+import com.comandante.uncolor.vkmusic.Apis.response_models.user_info_model.UserInfoResponseModel;
 
 import okhttp3.ResponseBody;
 import retrofit2.Call;
@@ -39,6 +39,13 @@ public interface ApiSource {
     @POST("https://lwts.ru/audio_vk/src/examples/example_microg.php")
     Call<AuthResponseModel> login(@Field("login") String login,
                                   @Field("pass") String pass);
+
+    @FormUrlEncoded
+    @POST("https://lwts.ru/audio_vk/src/examples/example_microg.php")
+    Call<AuthResponseModel> loginWithCaptcha(@Field("login") String login,
+                                             @Field("pass") String pass,
+                                             @Field("c_sid") String c_sid,
+                                             @Field("c_key") String c_key);
 
     @Headers("User-Agent: KateMobileAndroid/48.2 lite-433 (Android 8.1.0; SDK 27; arm64-v8a; Google Pixel 2 XL; en)")
     @GET("https://api.vk.com/method/audio.get")
