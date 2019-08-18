@@ -1,6 +1,6 @@
 package com.comandante.uncolor.vkmusic.Apis;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 import com.comandante.uncolor.vkmusic.application.App;
 

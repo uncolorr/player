@@ -8,15 +8,10 @@ import android.net.Uri;
 import android.os.Binder;
 import android.os.Environment;
 import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.util.Log;
-import android.util.LongSparseArray;
-import android.util.SparseArray;
+import androidx.annotation.Nullable;
 
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
-
-import java.util.HashMap;
 
 /**
  * Created by Uncolor on 25.10.2018.

@@ -1,8 +1,8 @@
 package com.comandante.uncolor.vkmusic.auth_activity;
 
-import android.support.v4.app.Fragment;
-import android.support.v4.app.FragmentManager;
-import android.support.v4.app.FragmentPagerAdapter;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+import androidx.fragment.app.FragmentPagerAdapter;
 
 import com.comandante.uncolor.vkmusic.auth_activity.auth_fragment.AuthFragment;
 import com.comandante.uncolor.vkmusic.auth_activity.music_fragment.MusicFragment;

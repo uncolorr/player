@@ -5,12 +5,6 @@ import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.v4.app.Fragment;
-import android.support.v7.app.AlertDialog;
-import android.support.v7.widget.LinearLayoutManager;
-import android.support.v7.widget.RecyclerView;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.view.LayoutInflater;
@@ -21,6 +15,13 @@ import android.widget.LinearLayout;
 import android.widget.ProgressBar;
 import android.widget.RadioButton;
 import android.widget.Toast;
+
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AlertDialog;
+import androidx.fragment.app.Fragment;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.GetVkMusicBody;
 import com.comandante.uncolor.vkmusic.Apis.request_bodies.SearchVkMusicBody;
@@ -40,8 +41,6 @@ import com.comandante.uncolor.vkmusic.utils.MessageReporter;
 import com.comandante.uncolor.vkmusic.widgets.CaptchaDialog;
 import com.comandante.uncolor.vkmusic.widgets.ResignInDialog;
 import com.flurry.android.FlurryAgent;
-import com.google.android.gms.ads.AdRequest;
-import com.google.android.gms.ads.AdView;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -60,9 +59,6 @@ import io.realm.RealmResults;
  */
 
 public class VkMusicFragment extends Fragment implements VkMusicFragmentContract.View {
-
-    @BindView(R.id.adView)
-    AdView adView;
 
     @BindView(R.id.recyclerViewMusic)
     RecyclerView recyclerViewMusic;
@@ -124,8 +120,6 @@ public class VkMusicFragment extends Fragment implements VkMusicFragmentContract
     }
 
     private void init() {
-        AdRequest adRequest = new AdRequest.Builder().build();
-        adView.loadAd(adRequest);
         resignInDialog = new ResignInDialog(getContext());
         resignInDialog.setOnSignInClickListener(getSignInClickListener());
         dialogProcessing = LoadingDialog.newInstanceWithoutCancelable(getContext(), LoadingDialog.LABEL_LOADING);

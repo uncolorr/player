@@ -10,7 +10,7 @@
     android:clickable="true"
     app:behavior_hideable="true"
     app:behavior_peekHeight="0dp"
-    app:layout_behavior="android.support.design.widget.BottomSheetBehavior"
+    app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
     android:focusable="true">
 
 
@@ -26,7 +26,7 @@
         android:src="@drawable/down"
         android:layout_marginTop="8dp"/>
 
-    <android.support.v7.widget.CardView
+    <androidx.cardview.widget.CardView
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_marginStart="56dp"
@@ -41,7 +41,7 @@
             android:scaleType="centerCrop"
             android:background="@drawable/album_default" />
 
-    </android.support.v7.widget.CardView>
+    </androidx.cardview.widget.CardView>
     
 
 

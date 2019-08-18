@@ -4,17 +4,14 @@ import android.annotation.SuppressLint;
 import android.app.Application;
 import android.content.ContentResolver;
 import android.content.Context;
-import android.content.Intent;
 import android.content.SharedPreferences;
 import android.provider.Settings;
 import android.util.Base64;
 import android.util.Log;
 
 import com.comandante.uncolor.vkmusic.Apis.Api;
-import com.comandante.uncolor.vkmusic.services.download.NewDownloadService;
 import com.crashlytics.android.Crashlytics;
 import com.flurry.android.FlurryAgent;
-import com.google.android.gms.ads.MobileAds;
 
 import javax.crypto.Cipher;
 import javax.crypto.SecretKey;
@@ -49,7 +46,6 @@ public class App extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        MobileAds.initialize(this, "ca-app-pub-7685514492081797~6471620101");
 
         new FlurryAgent.Builder()
                 .withLogEnabled(true)
@@ -63,7 +59,12 @@ public class App extends Application {
         Realm.init(this);
         RealmConfiguration config = new RealmConfiguration.Builder().name("music.realm").build();
         Realm.setDefaultConfiguration(config);
-        startService(new Intent(this, NewDownloadService.class));
+      /*  if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.P) {
+            App.getContext().startForegroundService(new Intent(App.getContext(), NewDownloadService.class));
+        } else {
+            App.getContext().startService(new Intent(App.getContext(), NewDownloadService.class));
+        }*/
+       // startService(new Intent(this, NewDownloadService.class));
     }
 
     public static Context getContext() {

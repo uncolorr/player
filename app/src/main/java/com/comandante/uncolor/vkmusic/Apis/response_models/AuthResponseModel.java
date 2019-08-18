@@ -1,6 +1,6 @@
 package com.comandante.uncolor.vkmusic.Apis.response_models;
 
-import android.support.annotation.Nullable;
+import androidx.annotation.Nullable;
 
 import com.google.gson.annotations.SerializedName;
 

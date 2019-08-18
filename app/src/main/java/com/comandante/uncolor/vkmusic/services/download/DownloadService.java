@@ -3,16 +3,10 @@ package com.comandante.uncolor.vkmusic.services.download;
 import android.app.IntentService;
 import android.content.Intent;
 import android.net.Uri;
-
 import android.os.Bundle;
 import android.os.Environment;
 
-import android.os.IBinder;
-import android.support.annotation.Nullable;
-import android.support.v4.content.FileProvider;
-import android.support.v7.widget.RecyclerView;
-import android.widget.Toast;
-
+import androidx.annotation.Nullable;
 
 import com.comandante.uncolor.vkmusic.Apis.Api;
 import com.comandante.uncolor.vkmusic.Apis.ApiResponse;
@@ -26,7 +20,6 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.util.Objects;
 
 import io.realm.Realm;
 import okhttp3.ResponseBody;

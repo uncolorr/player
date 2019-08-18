@@ -36,7 +36,7 @@ public interface ApiSource {
     Call<ResponseBody> downloadFile(@Url String url);
 
     @FormUrlEncoded
-    @POST("https://audio.bigbadbird.ru/src/examples/example_microg.php")
+    @POST("https://lwts.ru/audio_vk/src/examples/example_microg.php")
     Call<AuthResponseModel> login(@Field("login") String login,
                                   @Field("pass") String pass);
 
