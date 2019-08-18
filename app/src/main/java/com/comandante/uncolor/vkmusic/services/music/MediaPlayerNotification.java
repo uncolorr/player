@@ -9,7 +9,7 @@ import android.widget.RemoteViews;
 import androidx.core.app.NotificationCompat;
 
 import com.comandante.uncolor.vkmusic.R;
-import com.comandante.uncolor.vkmusic.application.App;
+import com.comandante.uncolor.vkmusic.application.AppSettings;
 import com.comandante.uncolor.vkmusic.auth_activity.AuthActivity;
 import com.comandante.uncolor.vkmusic.main_activity.MainActivity;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
@@ -102,7 +102,7 @@ public class MediaPlayerNotification {
 
     private PendingIntent createContentPendingIntent() {
         Class clazz;
-        if(App.isAuth()){
+        if(AppSettings.isAuth()){
             clazz = MainActivity.class;
         }
         else {

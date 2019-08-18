@@ -5,7 +5,7 @@ import android.content.Context;
 import com.comandante.uncolor.vkmusic.Apis.Api;
 import com.comandante.uncolor.vkmusic.Apis.ApiResponse;
 import com.comandante.uncolor.vkmusic.Apis.response_models.AuthResponseModel;
-import com.comandante.uncolor.vkmusic.application.App;
+import com.comandante.uncolor.vkmusic.application.AppSettings;
 
 /**
  * Created by Uncolor on 04.09.2018.
@@ -30,11 +30,11 @@ public class AuthFragmentPresenter implements AuthFragmentContract.Presenter, Ap
 
     @Override
     public boolean isAuth() {
-        return App.isAuth();
+        return AppSettings.isAuth();
     }
 
     private void rememberAuth(String token) {
-        App.saveToken(token);
+        AppSettings.saveToken(token);
     }
 
     @Override

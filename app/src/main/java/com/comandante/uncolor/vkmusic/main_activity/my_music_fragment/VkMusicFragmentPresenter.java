@@ -3,7 +3,6 @@ package com.comandante.uncolor.vkmusic.main_activity.my_music_fragment;
 import android.Manifest;
 import android.content.Context;
 import android.content.Intent;
-import android.widget.Toast;
 
 import com.comandante.uncolor.vkmusic.Apis.Api;
 import com.comandante.uncolor.vkmusic.Apis.ApiResponse;
@@ -15,6 +14,7 @@ import com.comandante.uncolor.vkmusic.Apis.response_models.album_image_model.Alb
 import com.comandante.uncolor.vkmusic.Apis.response_models.album_image_model.ImageInfo;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.application.AppPermissionManager;
+import com.comandante.uncolor.vkmusic.application.AppSettings;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.models.VkMusic;
 import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
@@ -55,10 +55,10 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
 
     @Override
     public void onLoadMusic(GetVkMusicBody getVkMusicBody, boolean isRefreshing) {
-        if (App.isAuth()) {
+        if (AppSettings.isAuth()) {
             view.showProgress();
             view.addLoadMoreProgress();
-            Api.getSource().getVkMusic(App.getToken(),
+            Api.getSource().getVkMusic(AppSettings.getToken(),
                     getVkMusicBody.getV(),
                     getVkMusicBody.getOffset(),
                     getVkMusicBody.getCount())
@@ -70,7 +70,7 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
     @Override
     public void onSearchMusic(SearchVkMusicBody searchVkMusicBody, int mode, boolean withCaptcha, boolean isRefreshing) {
         App.Log("Search offset: " + searchVkMusicBody.getOffset());
-        if (App.isAuth()) {
+        if (AppSettings.isAuth()) {
             view.showProgress();
             switch (mode) {
                 case MusicAdapter.MODE_CACHE:
@@ -88,7 +88,7 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
                     view.addLoadMoreProgress();
                     if (withCaptcha) {
                         Api.getSource().searchVkMusicWithCaptcha(
-                                App.getToken(),
+                                AppSettings.getToken(),
                                 searchVkMusicBody.getQ(),
                                 searchVkMusicBody.getV(),
                                 searchVkMusicBody.getOffset(),
@@ -99,7 +99,7 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
                                         this));
                     } else {
                         Api.getSource().searchVkMusic(
-                                App.getToken(),
+                                AppSettings.getToken(),
                                 searchVkMusicBody.getQ(),
                                 searchVkMusicBody.getV(),
                                 searchVkMusicBody.getOffset(),
@@ -120,7 +120,7 @@ public class VkMusicFragmentPresenter implements VkMusicFragmentContract.Present
     }
 
     private void rememberAuth(String token) {
-        App.saveToken(token);
+        AppSettings.saveToken(token);
     }
 
     private ApiResponse.ApiResponseListener<AuthResponseModel> getAuthCallback() {

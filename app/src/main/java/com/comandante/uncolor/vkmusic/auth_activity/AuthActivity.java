@@ -23,6 +23,7 @@ import androidx.appcompat.app.AppCompatActivity;
 import com.bumptech.glide.Glide;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
+import com.comandante.uncolor.vkmusic.application.AppSettings;
 import com.comandante.uncolor.vkmusic.main_activity.MainActivity;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
@@ -130,7 +131,7 @@ public class AuthActivity extends AppCompatActivity implements
     }
 
     private void init(){
-        if(App.isAuth()){
+        if(AppSettings.isAuth()){
             startActivity(MainActivity.getInstance(this));
             finish();
             return;

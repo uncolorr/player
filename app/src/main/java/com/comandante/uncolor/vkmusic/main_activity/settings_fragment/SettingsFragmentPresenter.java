@@ -11,6 +11,7 @@ import com.comandante.uncolor.vkmusic.Apis.response_models.user_info_model.UserI
 import com.comandante.uncolor.vkmusic.Apis.response_models.user_info_model.UserInfoResponseModel;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
+import com.comandante.uncolor.vkmusic.application.AppSettings;
 import com.comandante.uncolor.vkmusic.models.VkMusic;
 import com.comandante.uncolor.vkmusic.utils.DialogManager;
 
@@ -35,7 +36,7 @@ public class SettingsFragmentPresenter implements SettingsFragmentContract.Prese
     @Override
     public void onLoadUserInfo() {
         GetUserInfoRequestBody requestBody = new GetUserInfoRequestBody();
-        Api.getSource().getUserInfo(App.getToken(), requestBody.getFields(), requestBody.getV())
+        Api.getSource().getUserInfo(AppSettings.getToken(), requestBody.getFields(), requestBody.getV())
                 .enqueue(ApiResponse.getCallback(getUserInfoCallback(), this));
     }
 

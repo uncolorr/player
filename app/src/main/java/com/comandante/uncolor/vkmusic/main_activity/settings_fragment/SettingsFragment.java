@@ -3,18 +3,20 @@ package com.comandante.uncolor.vkmusic.main_activity.settings_fragment;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Bundle;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.fragment.app.Fragment;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.fragment.app.Fragment;
+
 import com.bumptech.glide.Glide;
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
+import com.comandante.uncolor.vkmusic.application.AppSettings;
 import com.comandante.uncolor.vkmusic.auth_activity.AuthActivity;
 import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
 import com.flurry.android.FlurryAgent;
@@ -102,7 +104,7 @@ public class SettingsFragment extends Fragment implements SettingsFragmentContra
     @Override
     public void logOut() {
         FlurryAgent.logEvent(getContext().getString(R.string.log_logout));
-        App.logOut();
+        AppSettings.logOut();
         getActivity().stopService(new Intent(getContext(), NewMusicService.class));
         getActivity().finishAffinity();
         startActivity(AuthActivity.getInstance(getContext()));
