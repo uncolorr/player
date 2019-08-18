@@ -10,7 +10,7 @@ public class AppSettings {
         return Hawk.contains(APP_PREFERENCES_TOKEN);
     }
 
-    public static void saveToken(String token) {
+    public static void signIn(String token) {
         Hawk.put(APP_PREFERENCES_TOKEN, token);
     }
 
