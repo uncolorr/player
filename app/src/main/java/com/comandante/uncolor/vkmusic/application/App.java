@@ -5,6 +5,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.comandante.uncolor.vkmusic.Apis.Api;
+import com.comandante.uncolor.vkmusic.services.music.PlaylistRepository;
 import com.crashlytics.android.Crashlytics;
 import com.flurry.android.FlurryAgent;
 import com.orhanobut.hawk.Hawk;
@@ -35,6 +36,7 @@ public class App extends Application {
         Realm.init(this);
         RealmConfiguration config = new RealmConfiguration.Builder().name("music.realm").build();
         Realm.setDefaultConfiguration(config);
+        PlaylistRepository.init();
     }
 
     public static Context getContext() {
