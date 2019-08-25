@@ -12,7 +12,7 @@ public class GetVkMusicBody {
     public GetVkMusicBody() {
         offset = 0;
         v = "5.64";
-        count = 100;
+        count = 50;
     }
 
     public void setOffset(int offset) {
