@@ -10,11 +10,17 @@
         app:showAsAction="ifRoom|withText" />
 
     <item
-        android:id="@+id/action_settings"
+        android:id="@+id/action_search"
         android:enabled="true"
-        android:title="@string/menu_settings"
+        android:title="@string/menu_search"
         android:icon="@drawable/settings"
         app:showAsAction="ifRoom|withText"/>
 
+    <item
+        android:id="@+id/action_downloaded"
+        android:enabled="true"
+        android:title="@string/menu_downloaded"
+        android:icon="@drawable/settings"
+        app:showAsAction="ifRoom|withText"/>
 
 </menu>

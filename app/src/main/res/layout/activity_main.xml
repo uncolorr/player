@@ -15,11 +15,21 @@
 
         <com.comandante.uncolor.vkmusic.widgets.StaticViewPager
             android:id="@+id/viewPager"
+            android:layout_width="0dp"
+            android:layout_height="0dp"
+            android:visibility="gone">
+
+        </com.comandante.uncolor.vkmusic.widgets.StaticViewPager>
+
+
+        <include
+
+            layout="@layout/contain_main"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1">
 
-        </com.comandante.uncolor.vkmusic.widgets.StaticViewPager>
+        </include>
 
 
         <ProgressBar

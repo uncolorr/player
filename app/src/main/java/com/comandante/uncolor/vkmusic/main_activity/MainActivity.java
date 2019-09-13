@@ -1,6 +1,5 @@
 package com.comandante.uncolor.vkmusic.main_activity;
 
-import android.app.DownloadManager;
 import android.content.BroadcastReceiver;
 import android.content.ComponentName;
 import android.content.Context;
@@ -10,12 +9,6 @@ import android.graphics.PorterDuff;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.IBinder;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.android.material.bottomsheet.BottomSheetBehavior;
-import androidx.core.content.ContextCompat;
-import androidx.appcompat.app.AppCompatActivity;
 import android.view.MenuItem;
 import android.view.View;
 import android.widget.ImageButton;
@@ -24,18 +17,27 @@ import android.widget.ProgressBar;
 import android.widget.SeekBar;
 import android.widget.TextView;
 
-import com.bumptech.glide.Glide;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.content.ContextCompat;
+import androidx.fragment.app.Fragment;
+import androidx.fragment.app.FragmentManager;
+
 import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
+import com.comandante.uncolor.vkmusic.main_activity.downloaded_fragment.DownloadedFragment;
+import com.comandante.uncolor.vkmusic.main_activity.main_music_fragment.MainMusicFragment;
+import com.comandante.uncolor.vkmusic.main_activity.search_music_fragment.SearchMusicFragment;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
-import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
+import com.comandante.uncolor.vkmusic.services.music.PlaylistRepository;
+import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.comandante.uncolor.vkmusic.utils.DurationConverter;
 import com.comandante.uncolor.vkmusic.utils.IntentFilterManager;
 import com.comandante.uncolor.vkmusic.widgets.SquareImageView;
-import com.comandante.uncolor.vkmusic.widgets.StaticViewPager;
+import com.google.android.material.bottomnavigation.BottomNavigationView;
+import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.makeramen.roundedimageview.RoundedImageView;
-
-import java.util.Objects;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -44,10 +46,7 @@ import butterknife.OnClick;
 
 public class MainActivity extends AppCompatActivity implements
         BottomNavigationView.OnNavigationItemSelectedListener,
-        SeekBar.OnSeekBarChangeListener{
-
-    @BindView(R.id.viewPager)
-    StaticViewPager viewPager;
+        SeekBar.OnSeekBarChangeListener, MainActivityContract.View {
 
     @BindView(R.id.bottomNavigationView)
     BottomNavigationView bottomNavigationView;
@@ -100,28 +99,46 @@ public class MainActivity extends AppCompatActivity implements
     @BindView(R.id.progressBarMusic)
     ProgressBar progressBarMusic;
 
-    private MainPagerAdapter adapter;
+    private MainMusicFragment mainMusicFragment;
+    private SearchMusicFragment searchMusicFragment;
+    private DownloadedFragment downloadedFragment;
+    private FragmentManager fm = getSupportFragmentManager();
+    private Fragment activeFragment;
 
     private BottomSheetBehavior sheetBehavior;
 
     private BroadcastReceiver musicReceiver;
 
-    private BroadcastReceiver downloadReceiver;
-
-    private Runnable musicPositionRunnable;
-
-    private Handler handler;
-
-    private int musicDuration;
-
-    private ServiceConnection serviceConnectionForMusic;
-
-
-    private NewMusicService newMusicService;
-
+    private MusicService newMusicService;
 
     private boolean isBoundedMusic = false;
 
+    private MainActivityContract.Presenter presenter;
+
+    private Handler handler = new Handler();
+
+    private ProgressUpdateRunnable progressUpdateRunnable = new ProgressUpdateRunnable();
+
+    ServiceConnection serviceConnectionForMusic = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            App.Log("onServiceConnected");
+            newMusicService = ((MusicService.TempMusicBinder) service).getService();
+            isBoundedMusic = true;
+            if(newMusicService.isPlaying()) {
+                presenter.onBindPlayerState(PlaylistRepository.get().getCurrentMusic(),
+                        newMusicService.isLooping(),
+                        newMusicService.isShuffling());
+                startProgressUpdate();
+            }
+        }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+            App.Log("onServiceDisconnected");
+            isBoundedMusic = false;
+        }
+    };
 
 
     public static Intent getInstance(Context context) {
@@ -137,104 +154,64 @@ public class MainActivity extends AppCompatActivity implements
     }
 
     private void init() {
+        presenter = new MainActivityPresenter(this, this);
         sheetBehavior = BottomSheetBehavior.from(bigPlayerPanel);
-        hidePlayer();
         bottomNavigationView.setOnNavigationItemSelectedListener(this);
-        adapter = new MainPagerAdapter(getSupportFragmentManager());
-        viewPager.setAdapter(adapter);
-        viewPager.setOffscreenPageLimit(3);
-        viewPager.setPagingEnabled(false);
-        musicReceiver = getMusicReceiver();
-        downloadReceiver = getDownloadReceiver();
-        registerReceiver(musicReceiver, IntentFilterManager.getMusicIntentFilter());
-        registerReceiver(downloadReceiver, IntentFilterManager.getDownloadIntentFilter());
-        handler = new Handler();
-        musicPositionRunnable = getMusicPositionRunnable();
         seekBar.setOnSeekBarChangeListener(this);
-        serviceConnectionForMusic = new ServiceConnection() {
-            @Override
-            public void onServiceConnected(ComponentName name, IBinder service) {
-                App.Log("onServiceConnected");
-                newMusicService = ((NewMusicService.MusicBinder) service).getService();
-                bindPlayerState();
-                isBoundedMusic = true;
-            }
-
-            @Override
-            public void onServiceDisconnected(ComponentName name) {
-                App.Log("onServiceDisconnected");
-                isBoundedMusic = false;
-            }
-        };
+        initFragments();
+        musicReceiver = presenter.getTempMusicReceiver();
+        registerReceiver(musicReceiver, IntentFilterManager.getTempMusicIntentFilter());
+        checkServiceConnection();
     }
 
-    private BroadcastReceiver getDownloadReceiver() {
-        return new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                App.Log("New Download received");
-                DownloadManager downloadManager = ((DownloadManager) getSystemService(DOWNLOAD_SERVICE));
-                String action = intent.getAction();
-                if (DownloadManager.ACTION_DOWNLOAD_COMPLETE.equals(action)) {
-                    App.Log("New Download complete");
-                }
-            }
-        };
-    }
-
-    private void bindPlayerState() {
-        if (newMusicService.isPlaying()) {
-            BaseMusic music = newMusicService.getCurrentMusic();
-            App.Log("player playing");
-            showPlayerPanel();
-            setPauseButtons();
-            setSongDescriptions(music);
-            changeRepeatButtonState(newMusicService.isLooping());
-            changeShuffleButtonState(newMusicService.isShuffling());
-            handler.post(musicPositionRunnable);
-        }
+    private void initFragments(){
+        mainMusicFragment = MainMusicFragment.newInstance();
+        activeFragment = mainMusicFragment;
+        fm.beginTransaction().add(R.id.main_container, mainMusicFragment, "MF")
+                .commit();
     }
 
     @OnClick(R.id.playerPanel)
     void onPlayerPanelClick() {
-        showPlayer();
+        showPlayerPanel();
     }
 
     @OnClick(R.id.imageButtonHide)
     void onImageButtonHideClick() {
-        hidePlayer();
+        hidePlayerPanel();
     }
 
     @OnClick(R.id.imageButtonRepeat)
     void onRepeatButtonClick() {
         boolean isLooping = newMusicService.isLooping();
         newMusicService.setLooping(!isLooping);
-        changeRepeatButtonState(!isLooping);
+        setLoopingState(!isLooping);
     }
 
     @OnClick(R.id.imageButtonShuffle)
     void onShuffleButtonClick() {
         boolean isShuffling = newMusicService.isShuffling();
         if (isShuffling) {
-            newMusicService.unshuffle();
+            newMusicService.setShuffle(false);
         } else {
-            newMusicService.shuffle();
+            newMusicService.setShuffle(true);
         }
-        changeShuffleButtonState(!isShuffling);
+        setShufflingState(!isShuffling);
     }
 
 
     @OnClick({R.id.imageButtonPanelPlay, R.id.imageButtonPlayerPlay})
     void onPlayButtonClick() {
         if (isBoundedMusic) {
+            if(newMusicService.isPreparing()){
+                return;
+            }
             if (newMusicService.isPlaying()) {
                 newMusicService.pause();
-                handler.removeCallbacks(musicPositionRunnable);
-                setPlayButtons();
+                presenter.onPauseTrack();
             } else {
                 newMusicService.resume();
-                handler.post(musicPositionRunnable);
-                setPauseButtons();
+                presenter.onResumeTrack();
             }
         }
     }
@@ -244,13 +221,7 @@ public class MainActivity extends AppCompatActivity implements
         if (isBoundedMusic) {
             BaseMusic music = newMusicService.next(true);
             if(music != null) {
-                setSongDescriptions(music);
-                setPauseButtons();
-                setPlaybackPosition(0);
-                handler.removeCallbacks(musicPositionRunnable);
-                Intent musicIntent = new Intent(NewMusicService.ACTION_NEXT);
-                musicIntent.putExtra(NewMusicService.ARG_MUSIC, music);
-                sendBroadcast(musicIntent);
+                presenter.onSwitchTrack(MusicService.ACTION_NEXT, music);
             }
         }
     }
@@ -259,13 +230,7 @@ public class MainActivity extends AppCompatActivity implements
     void onPreviousButtonClick() {
         if (isBoundedMusic) {
             BaseMusic music = newMusicService.previous();
-            setSongDescriptions(music);
-            setPauseButtons();
-            setPlaybackPosition(0);
-            handler.removeCallbacks(musicPositionRunnable);
-            Intent musicIntent = new Intent(NewMusicService.ACTION_PREVIOUS);
-            musicIntent.putExtra(NewMusicService.ARG_MUSIC, music);
-            sendBroadcast(musicIntent);
+            presenter.onSwitchTrack(MusicService.ACTION_PREVIOUS, music);
         }
     }
 
@@ -273,129 +238,57 @@ public class MainActivity extends AppCompatActivity implements
         return sheetBehavior.getState() == BottomSheetBehavior.STATE_HIDDEN;
     }
 
-    private void showPlayer() {
+    @Override
+    public void showPlayerPanel() {
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_EXPANDED) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
         }
     }
 
-    private void hidePlayer() {
+    @Override
+    public void hidePlayerPanel() {
         if (sheetBehavior.getState() != BottomSheetBehavior.STATE_HIDDEN) {
             sheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
         }
     }
 
     @Override
-    public void onBackPressed() {
-        if (!isPlayerPanelHidden()) {
-            hidePlayer();
-            return;
-        }
-        super.onBackPressed();
+    public void showPlayerBar() {
+        progressBarMusic.setVisibility(View.VISIBLE);
+        playerPanel.setVisibility(View.VISIBLE);
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        unregisterReceiver(musicReceiver);
+    public void hidePlayerBar() {
+        progressBarMusic.setVisibility(View.GONE);
+        playerPanel.setVisibility(View.GONE);
     }
 
-    private Runnable getMusicPositionRunnable() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                if (isBoundedMusic) {
-                    int currentPlaybackPosition = newMusicService.getCurrentPlaybackPosition();
-                    progressBarMusic.setProgress(currentPlaybackPosition);
-                    seekBar.setProgress(currentPlaybackPosition);
-                    textViewCurrentPosition.setText(DurationConverter
-                            .getDurationFormat(currentPlaybackPosition));
-                    if (currentPlaybackPosition < musicDuration) {
-                        handler.postDelayed(musicPositionRunnable, 1000);
-                    }
-                }
-            }
-        };
+    @Override
+    public void setPlayButtons() {
+        imageButtonPanelPlay.setImageResource(R.drawable.play);
+        imageButtonPlayerPlay.setImageResource(R.drawable.play);
     }
 
-    private BroadcastReceiver getMusicReceiver() {
-        return new BroadcastReceiver() {
-            @Override
-            public void onReceive(Context context, Intent intent) {
-                App.Log("onReceive");
-                if (intent == null) {
-                    App.Log("intent null");
-                }
-                String action = intent.getAction();
-                App.Log("point");
-                if (Objects.equals(action, NewMusicService.ACTION_PLAY)) {
-                    App.Log("On Action play");
-                    Intent serviceIntent = new Intent(MainActivity.this, NewMusicService.class);
-                    bindService(serviceIntent, serviceConnectionForMusic, 0);
-                    BaseMusic music = intent.getParcelableExtra(NewMusicService.ARG_MUSIC);
-                    setSongDescriptions(music);
-                    setPauseButtons();
-                    setPlaybackPosition(0);
-                    showPlayerPanel();
-                    handler.removeCallbacks(musicPositionRunnable);
-                }
-
-                if (Objects.equals(action, NewMusicService.ACTION_PAUSE_OR_RESUME)) {
-                    App.Log("new pause resume");
-                    changePlayingState();
-                }
-
-                if (Objects.equals(action, NewMusicService.ACTION_NEXT)) {
-                    App.Log("On Action next");
-                    BaseMusic music = intent.getParcelableExtra("music");
-                    setSongDescriptions(music);
-                    setPauseButtons();
-                    setPlaybackPosition(0);
-                    handler.removeCallbacks(musicPositionRunnable);
-                }
-
-                if (Objects.equals(action, NewMusicService.ACTION_PREVIOUS)) {
-                    App.Log("On Action previous");
-                    BaseMusic music = intent.getParcelableExtra("music");
-                    setSongDescriptions(music);
-                    setPauseButtons();
-                    setPlaybackPosition(0);
-                    handler.removeCallbacks(musicPositionRunnable);
-                }
-
-                if (Objects.equals(action, NewMusicService.ACTION_BEGIN_PLAYING)) {
-                    App.Log("On Action begin playing");
-                    handler.removeCallbacks(musicPositionRunnable);
-                    setPauseButtons();
-                    setPlaybackPosition(0);
-                    handler.post(musicPositionRunnable);
-                }
-
-                if (Objects.equals(action, NewMusicService.ACTION_CLOSE)) {
-                    App.Log("on Action close");
-                    handler.removeCallbacks(musicPositionRunnable);
-                    hidePlayerPanel();
-                }
-
-            }
-        };
+    @Override
+    public void setPauseButtons() {
+        imageButtonPanelPlay.setImageResource(R.drawable.pause);
+        imageButtonPlayerPlay.setImageResource(R.drawable.pause);
     }
 
-    private void changePlayingState() {
-        if (isBoundedMusic) {
-            if (newMusicService.isPlaying()) {
-                App.Log("change playing");
-                handler.post(musicPositionRunnable);
-                setPauseButtons();
-            } else {
-                App.Log("change not playing");
-                handler.removeCallbacks(musicPositionRunnable);
-                setPlayButtons();
-            }
-        }
+    @Override
+    public void setSongDescriptions(BaseMusic music) {
+        textViewPanelSongTitle.setText(music.getTitle());
+        textViewPanelArtist.setText(music.getArtist());
+        textViewPlayerSongTitle.setText(music.getTitle());
+        textViewPlayerArtist.setText(music.getArtist());
+        textViewDuration.setText(DurationConverter.getDurationFormat(music.getDuration()));
+        seekBar.setMax(music.getDuration());
+        progressBarMusic.setMax(music.getDuration());
     }
 
-    private void changeRepeatButtonState(boolean isLooping) {
+    @Override
+    public void setLoopingState(boolean isLooping) {
         if (isLooping) {
             imageButtonRepeat.setBackground(ContextCompat.getDrawable(this,
                     R.drawable.button_repeat_activated));
@@ -413,7 +306,8 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private void changeShuffleButtonState(boolean isShuffling) {
+    @Override
+    public void setShufflingState(boolean isShuffling) {
         if (isShuffling) {
             imageButtonShuffle.setBackground(ContextCompat.getDrawable(this,
                     R.drawable.button_repeat_activated));
@@ -431,97 +325,103 @@ public class MainActivity extends AppCompatActivity implements
         }
     }
 
-    private void showPlayerPanel() {
-        progressBarMusic.setVisibility(View.VISIBLE);
-        playerPanel.setVisibility(View.VISIBLE);
+    @Override
+    public void updateMusicPosition() {
+        if(isBoundedMusic){
+           int position = newMusicService.getCurrentPlaybackPosition();
+           textViewCurrentPosition.setText(DurationConverter.getDurationFormat(position));
+           seekTo(position);
+        }
     }
 
-    private void hidePlayerPanel() {
-        progressBarMusic.setVisibility(View.GONE);
-        playerPanel.setVisibility(View.GONE);
+    @Override
+    public void startProgressUpdate() {
+        App.Log("startProgressUpdate");
+        handler.post(progressUpdateRunnable);
     }
 
-    private void setPlayButtons() {
-        imageButtonPanelPlay.setImageResource(R.drawable.play);
-        imageButtonPlayerPlay.setImageResource(R.drawable.play);
+    @Override
+    public void pauseProgressUpdate() {
+        App.Log("pauseProgressUpdate");
+        handler.removeCallbacks(progressUpdateRunnable);
     }
 
-    private void setPauseButtons() {
-        imageButtonPanelPlay.setImageResource(R.drawable.pause);
-        imageButtonPlayerPlay.setImageResource(R.drawable.pause);
+    @Override
+    public void resumeProgressUpdate() {
+        App.Log("resumeProgressUpdate");
+        handler.post(progressUpdateRunnable);
     }
 
-    private void setSongDescriptions(BaseMusic music) {
-        textViewPanelSongTitle.setText(music.getTitle());
-        textViewPanelArtist.setText(music.getArtist());
-        textViewPlayerSongTitle.setText(music.getTitle());
-        textViewPlayerArtist.setText(music.getArtist());
-        musicDuration = music.getDuration();
-        textViewDuration.setText(DurationConverter.getDurationFormat(music.getDuration()));
-        setDurationForBars(music.getDuration());
-        setAlbumImage(music.getAlbumImageUrl());
+    @Override
+    public void interruptProgressUpdate() {
+        App.Log("interruptProgressUpdate");
+        handler.removeCallbacks(progressUpdateRunnable);
+        progressUpdateRunnable = null;
+        handler = null;
     }
 
-    private void setPlaybackPosition(int playbackPosition) {
+    @Override
+    public void broadcastSwitchedTrack(String action, BaseMusic music) {
+        Intent musicIntent = new Intent(action);
+        musicIntent.putExtra(MusicService.ARG_MUSIC, music);
+        sendBroadcast(musicIntent);
+    }
+
+    @Override
+    public void checkServiceConnection() {
+        if(isBoundedMusic){
+            return;
+        }
+        Intent serviceIntent = new Intent(this, MusicService.class);
+        bindService(serviceIntent, serviceConnectionForMusic, 0);
+    }
+
+    private void seekTo(int playbackPosition) {
         progressBarMusic.setProgress(playbackPosition);
         seekBar.setProgress(playbackPosition);
     }
 
-    public void setAlbumImage(String url) {
-        if (url == null) {
-            imageViewMusicPlate.setImageResource(R.drawable.album_default);
-            imageViewPanelAlbum.setImageResource(R.drawable.album_default);
-            return;
-        }
-        Glide.with(this).load(url).into(imageViewMusicPlate);
-        Glide.with(this).load(url).into(imageViewPanelAlbum);
-
-    }
-
-    public void setDurationForBars(int duration) {
-        seekBar.setMax(duration);
-        progressBarMusic.setMax(duration);
-    }
-
-
     @Override
     protected void onResume() {
         super.onResume();
-        Intent serviceIntent = new Intent(this, NewMusicService.class);
-        bindService(serviceIntent, serviceConnectionForMusic, 0);
+        checkServiceConnection();
+        startProgressUpdate();
     }
 
     @Override
     protected void onStop() {
         super.onStop();
         if (!isBoundedMusic) return;
-        unbindService(serviceConnectionForMusic);
-        isBoundedMusic = false;
-        handler.removeCallbacks(musicPositionRunnable);
+        pauseProgressUpdate();
     }
 
+
     @Override
-    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
-        int id = item.getItemId();
-        switch (id) {
-            case R.id.action_my_music:
-                viewPager.setCurrentItem(0, true);
-                break;
-            case R.id.action_settings:
-                viewPager.setCurrentItem(1, true);
-                break;
+    public void onBackPressed() {
+        if (!isPlayerPanelHidden()) {
+            hidePlayerPanel();
+            return;
         }
-        return true;
+        super.onBackPressed();
+    }
+
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(serviceConnectionForMusic);
+        unregisterReceiver(musicReceiver);
+        interruptProgressUpdate();
     }
 
     @Override
     public void onProgressChanged(SeekBar seekBar, int progress, boolean fromUser) {
         if (fromUser) {
-            App.Log("progress: " + Integer.toString(progress));
-            setPlaybackPosition(progress);
-            newMusicService.seekTo(progress);
+            if(isBoundedMusic) {
+                newMusicService.seekTo(progress);
+                updateMusicPosition();
+            }
         }
-
     }
 
     @Override
@@ -532,5 +432,57 @@ public class MainActivity extends AppCompatActivity implements
     @Override
     public void onStopTrackingTouch(SeekBar seekBar) {
 
+    }
+
+    @Override
+    public boolean onNavigationItemSelected(@NonNull MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case R.id.action_my_music:
+                if(mainMusicFragment == null){
+                    mainMusicFragment = MainMusicFragment.newInstance();
+                }
+                if(activeFragment == mainMusicFragment){
+                    return true;
+                }
+                fm.beginTransaction().hide(activeFragment).show(mainMusicFragment).commit();
+                activeFragment = mainMusicFragment;
+                return true;
+
+            case R.id.action_search:
+                if(searchMusicFragment == null){
+                    searchMusicFragment = SearchMusicFragment.newInstance();
+                    fm.beginTransaction().add(R.id.main_container, searchMusicFragment, "SF")
+                            .hide(searchMusicFragment).commit();
+                }
+                if(activeFragment == searchMusicFragment){
+                    return true;
+                }
+                fm.beginTransaction().hide(activeFragment).show(searchMusicFragment).commit();
+                activeFragment = searchMusicFragment;
+                return true;
+
+            case R.id.action_downloaded:
+                if(downloadedFragment == null){
+                    downloadedFragment = DownloadedFragment.newInstance();
+                    fm.beginTransaction().add(R.id.main_container, downloadedFragment, "DF")
+                            .hide(downloadedFragment).commit();
+                }
+                if(activeFragment == downloadedFragment){
+                    return true;
+                }
+                fm.beginTransaction().hide(activeFragment).show(downloadedFragment).commit();
+                activeFragment = downloadedFragment;
+                return true;
+        }
+        return false;
+    }
+
+    private class ProgressUpdateRunnable implements Runnable{
+        @Override
+        public void run() {
+            MainActivity.this.updateMusicPosition();
+            handler.postDelayed(this, 1000);
+        }
     }
 }

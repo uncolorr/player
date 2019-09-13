@@ -18,7 +18,7 @@ import com.comandante.uncolor.vkmusic.R;
 import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.application.AppSettings;
 import com.comandante.uncolor.vkmusic.auth_activity.AuthActivity;
-import com.comandante.uncolor.vkmusic.services.music.NewMusicService;
+import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.flurry.android.FlurryAgent;
 
 import butterknife.BindView;
@@ -105,10 +105,8 @@ public class SettingsFragment extends Fragment implements SettingsFragmentContra
     public void logOut() {
         FlurryAgent.logEvent(getContext().getString(R.string.log_logout));
         AppSettings.logOut();
-        getActivity().stopService(new Intent(getContext(), NewMusicService.class));
+        getActivity().stopService(new Intent(getContext(), MusicService.class));
         getActivity().finishAffinity();
         startActivity(AuthActivity.getInstance(getContext()));
     }
-
-
 }
