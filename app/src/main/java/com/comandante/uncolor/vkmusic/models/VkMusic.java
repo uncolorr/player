@@ -12,6 +12,8 @@ import io.realm.RealmObject;
 
 public class VkMusic extends RealmObject implements BaseMusic{
 
+    public static final int TYPE = 1;
+
     @SerializedName("id")
     private long id;
 
@@ -118,7 +120,6 @@ public class VkMusic extends RealmObject implements BaseMusic{
 
     @Override
     public void writeToParcel(Parcel dest, int flags) {
-
         dest.writeLong(id);
         dest.writeString(artist);
         dest.writeString(title);
@@ -155,4 +156,11 @@ public class VkMusic extends RealmObject implements BaseMusic{
     public int hashCode() {
         return Long.valueOf(id).hashCode();
     }
+
+    @Override
+    public int getType() {
+        return TYPE;
+    }
+
+
 }

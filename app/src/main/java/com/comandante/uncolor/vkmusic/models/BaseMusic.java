@@ -2,11 +2,13 @@ package com.comandante.uncolor.vkmusic.models;
 
 import android.os.Parcelable;
 
+import com.comandante.uncolor.vkmusic.base_adapter.ItemModel;
+
 /**
  * Created by Uncolor on 05.09.2018.
  */
 
-public interface BaseMusic extends Parcelable {
+public interface BaseMusic extends Parcelable, ItemModel{
 
      static final int STATE_DEFAULT = 0;
      static final int STATE_DOWNLOADING = 1;
