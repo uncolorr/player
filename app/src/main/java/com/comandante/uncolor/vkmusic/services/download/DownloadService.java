@@ -2,7 +2,6 @@ package com.comandante.uncolor.vkmusic.services.download;
 
 import android.app.IntentService;
 import android.content.Intent;
-import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
 
@@ -11,6 +10,7 @@ import androidx.annotation.Nullable;
 import com.comandante.uncolor.vkmusic.Apis.Api;
 import com.comandante.uncolor.vkmusic.Apis.ApiResponse;
 import com.comandante.uncolor.vkmusic.application.App;
+import com.comandante.uncolor.vkmusic.database.DatabaseManager;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.models.VkMusic;
 
@@ -21,7 +21,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 
-import io.realm.Realm;
 import okhttp3.ResponseBody;
 
 
@@ -37,55 +36,32 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
 
     public static final String ARG_MUSIC = "music";
 
-    private Realm realm;
-
-    public DownloadService() {
-        super("Download Service");
-        realm = Realm.getDefaultInstance();
-    }
-
     private BaseMusic music;
 
-    @Override
-    public void onStart(@Nullable Intent intent, int startId) {
-        App.Log("onStart service");
-        super.onStart(intent, startId);
+    public DownloadService() {
+        super("Download service");
     }
 
     @Override
-    protected void onHandleIntent(Intent intent) {
-        App.Log("onHandleIntent service");
-        Bundle extras = intent.getExtras();
-        if (extras != null) {
-            music = extras.getParcelable("music");
-            if (music != null) {
-                App.Log("download url: " + music.getDownload());
-            }
-        }
-
-        if (music == null) {
-            App.Log("music null");
-            sendIntent(ACTION_DOWNLOAD_FAILURE);
+    protected void onHandleIntent(@Nullable Intent intent) {
+        App.Log("onHandleIntent");
+        if(intent == null){
             return;
         }
-        String artist = "";
-        String title = "";
-        if (music.getArtist() != null) {
-            artist = music.getArtist();
+        Bundle extras = intent.getExtras();
+        if(extras == null){
+            return;
         }
 
-        if (music.getTitle() != null) {
-            title = music.getTitle();
+        music = extras.getParcelable(ARG_MUSIC);
+        if(music == null){
+            return;
         }
-        File outputFile = new File(Environment
-                .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                artist + " - " + title + ".mp3");
-        String uriFromFile = Uri.fromFile(outputFile).toString();
-        App.Log("Uri from file: " + uriFromFile);
-        initDownload();
+
+        initDownload(music);
     }
 
-    private void initDownload() {
+    private void initDownload(BaseMusic music) {
         App.Log("init download");
         onDownloadStarted(ACTION_DOWNLOAD_STARTED);
         Api.getSource().downloadFile(music.getDownload()).enqueue(ApiResponse
@@ -94,14 +70,11 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
     }
 
     private ApiResponse.ApiResponseListener<ResponseBody> getDownloadCallback() {
-        return new ApiResponse.ApiResponseListener<ResponseBody>() {
-            @Override
-            public void onResponse(ResponseBody result) {
-                try {
-                    downloadFile(result);
-                } catch (IOException e) {
-                    e.printStackTrace();
-                }
+        return result -> {
+            try {
+                downloadFile(result);
+            } catch (IOException e) {
+                e.printStackTrace();
             }
         };
     }
@@ -109,26 +82,20 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
     private void downloadFile(ResponseBody body) throws IOException {
         App.Log("download file");
         int count;
-        byte data[] = new byte[1024 * 4];
+        byte[] data = new byte[1024 * 4];
         long fileSize = body.contentLength();
         InputStream bis = new BufferedInputStream(body.byteStream(), 1024 * 8);
-        String artist = "";
-        String title = "";
-        if (music.getArtist() != null) {
-            artist = music.getArtist();
-        }
-
-        if (music.getTitle() != null) {
-            title = music.getTitle();
-        }
         File outputFile =
                 new File(Environment
                         .getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS),
-                        artist + " - " + title + ".mp3");
+                        music.getArtist() + " - " + music.getTitle() + ".mp3");
         OutputStream output = new FileOutputStream(outputFile);
+
         long total = 0;
         long startTime = System.currentTimeMillis();
         int timeCount = 1;
+        Download download = new Download();
+
         while ((count = bis.read(data)) != -1) {
             total += count;
             int totalFileSize = (int) (fileSize / (Math.pow(1024, 2)));
@@ -137,7 +104,6 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
             int progress = (int) ((total * 100) / fileSize);
             long currentTime = System.currentTimeMillis() - startTime;
 
-            Download download = new Download();
             download.setTotalFileSize(totalFileSize);
 
             if (currentTime > 1000 * timeCount) {
@@ -149,15 +115,14 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
 
             output.write(data, 0, count);
         }
-        App.Log("output path: " + outputFile.getAbsolutePath());
+        output.flush();
+        output.close();
+        bis.close();
+
         music.setLocalPath(outputFile.getAbsolutePath());
         music.setState(BaseMusic.STATE_COMPLETED);
         saveToRealm();
         onDownloadComplete(ACTION_DOWNLOAD_COMPLETED);
-        output.flush();
-        output.close();
-        bis.close();
-        App.Log("download complete");
     }
 
     @Override
@@ -169,14 +134,12 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
     public void saveToRealm(){
         if (music instanceof VkMusic) {
             VkMusic vkMusic = (VkMusic) music;
-            realm.beginTransaction();
-            realm.copyToRealm(vkMusic);
-            realm.commitTransaction();
+            DatabaseManager.get().save(vkMusic);
         }
     }
 
 
-    private void sendIntent(String action) {
+    private void sendBroadcastIntent(String action) {
         App.Log("send intent");
         Intent intent = new Intent();
         intent.setAction(action);
@@ -186,22 +149,17 @@ public class DownloadService extends IntentService implements ApiResponse.ApiFai
 
     private void onDownloadComplete(String action) {
         App.Log("onDownloadComplete");
-        sendIntent(action);
+        sendBroadcastIntent(action);
     }
 
     private void onDownloadStarted(String action) {
         App.Log("onDownloadStarted");
-        sendIntent(action);
-    }
-
-    @Override
-    public void onTaskRemoved(Intent rootIntent) {
-
+        sendBroadcastIntent(action);
     }
 
     @Override
     public void onFailure(int code, String message) {
         App.Log("Download failure");
-        sendIntent(ACTION_DOWNLOAD_FAILURE);
+        sendBroadcastIntent(ACTION_DOWNLOAD_FAILURE);
     }
 }
