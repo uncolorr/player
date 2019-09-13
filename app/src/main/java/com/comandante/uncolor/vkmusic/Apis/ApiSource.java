@@ -1,7 +1,6 @@
 package com.comandante.uncolor.vkmusic.Apis;
 
 
-import com.comandante.uncolor.vkmusic.Apis.response_models.MusicListResponseModel;
 import com.comandante.uncolor.vkmusic.Apis.response_models.AuthResponseModel;
 import com.comandante.uncolor.vkmusic.Apis.response_models.VKMusicResponseModel;
 import com.comandante.uncolor.vkmusic.Apis.response_models.album_image_model.AlbumImageResponseModel;
@@ -23,12 +22,6 @@ import retrofit2.http.Url;
  */
 
 public interface ApiSource {
-
-    @Headers({"User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1.2 Safari/605.1.15",
-            "Referer: https://api-2.datmusic.xyz"})
-    @GET("https://api-2.datmusic.xyz/search")
-    Call<MusicListResponseModel> getMusic(@Query("q") String query,
-                                          @Query("page") int offset);
 
     @GET
     @Headers("User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10_13_6) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/11.1.2 Safari/605.1.15")
