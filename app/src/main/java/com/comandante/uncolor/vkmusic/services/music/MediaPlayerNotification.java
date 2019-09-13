@@ -46,10 +46,10 @@ public class MediaPlayerNotification {
         views = new RemoteViews(context.getPackageName(), R.layout.player_status_bar);
         bigViews = new RemoteViews(context.getPackageName(), R.layout.player_status_bar);
         pendingIntentContent = createContentPendingIntent();
-        pendingIntentPlay = createPendingIntent(NewMusicService.ACTION_PAUSE_OR_RESUME);
-        pendingIntentPrevious = createPendingIntent(NewMusicService.ACTION_PREVIOUS);
-        pendingIntentNext = createPendingIntent(NewMusicService.ACTION_NEXT);
-        pendingIntentClose = createPendingIntent(NewMusicService.ACTION_CLOSE);
+        pendingIntentPlay = createPendingIntent(MusicService.ACTION_PAUSE_OR_RESUME);
+        pendingIntentPrevious = createPendingIntent(MusicService.ACTION_PREVIOUS);
+        pendingIntentNext = createPendingIntent(MusicService.ACTION_NEXT);
+        pendingIntentClose = createPendingIntent(MusicService.ACTION_CLOSE);
         setPendingIntents();
         setMusicInfo();
     }
@@ -93,7 +93,7 @@ public class MediaPlayerNotification {
     }
 
     private PendingIntent createPendingIntent(String action) {
-        Intent intent = new Intent(context, NewMusicService.class);
+        Intent intent = new Intent(context, MusicService.class);
         intent.setAction(action);
         return PendingIntent.getService(context,
                 0, intent,

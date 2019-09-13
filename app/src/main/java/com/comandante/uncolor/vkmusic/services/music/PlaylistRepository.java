@@ -40,8 +40,9 @@ public class PlaylistRepository {
     }
 
 
-    public void setPlaylist(List<BaseMusic> playlist) {
-        PlaylistRepository.playlist = playlist;
+    public void setPlaylist(List<BaseMusic> newPlaylist) {
+        playlist = null;
+        playlist = newPlaylist;
     }
 
     public List<BaseMusic> getPlaylist() {
@@ -57,8 +58,8 @@ public class PlaylistRepository {
         return currentMusic;
     }
 
-    public void setCurrentMusic(BaseMusic currentMusic) {
-        PlaylistRepository.currentMusic = currentMusic;
+    public void setCurrentMusic(BaseMusic music) {
+        currentMusic = music;
     }
 
     public void setPosition(int position) {
