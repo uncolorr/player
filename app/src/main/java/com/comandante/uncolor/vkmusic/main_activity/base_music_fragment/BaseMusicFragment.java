@@ -11,7 +11,7 @@ import com.comandante.uncolor.vkmusic.application.App;
 import com.comandante.uncolor.vkmusic.models.BaseMusic;
 import com.comandante.uncolor.vkmusic.services.music.MusicService;
 import com.comandante.uncolor.vkmusic.services.music.PlaylistRepository;
-import com.comandante.uncolor.vkmusic.temp_music_adapter.MusicAdapter;
+import com.comandante.uncolor.vkmusic.music_adapter.MusicAdapter;
 
 import java.util.ArrayList;
 
