@@ -45,21 +45,12 @@
         </provider>
 
         <service
-            android:name="com.comandante.uncolor.vkmusic.services.music.NewMusicService"
-            android:exported="false">
-        </service>
-
-        <service
             android:name="com.comandante.uncolor.vkmusic.services.download.DownloadService"
             android:exported="false">
 
         </service>
 
-        <service
-            android:name="com.comandante.uncolor.vkmusic.services.download.NewDownloadService"
-            android:exported="false">
-
-        </service>
+        <service android:name=".services.music.MusicService" />
 
 
         <activity
