@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:gravity="center"
+    android:layout_marginStart="64dp"
+    android:layout_marginEnd="64dp"
+    android:layout_height="match_parent">
+
+
+    <ImageView
+        android:id="@+id/imageViewException"
+        android:layout_width="108dp"
+        android:layout_height="108dp"
+        android:scaleType="centerCrop"
+        android:src="@drawable/ic_more"
+        android:visibility="gone"
+        android:layout_marginBottom="16dp"/>
+
+    <TextView
+        android:id="@+id/textViewExceptionTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        tools:text="Нет Интернет-соединения"
+        android:textAlignment="center"
+        android:textSize="20sp"
+        android:visibility="gone"
+        android:layout_marginBottom="8dp"/>
+
+    <TextView
+        android:id="@+id/textViewExceptionSubTitle"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:textAlignment="center"
+        android:visibility="gone"
+        tools:text="Проверьте подключение и попробуйте еще раз"
+        android:layout_marginBottom="16dp" />
+
+    <Button
+        android:id="@+id/buttonExceptionRetry"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:visibility="gone"
+        android:text="Повторить"/>
+
+
+</LinearLayout>
